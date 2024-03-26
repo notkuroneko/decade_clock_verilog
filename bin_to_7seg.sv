@@ -31,13 +31,14 @@ module bin_to_7seg_test();
 	reg [3:0] stim_bcd;
 	reg [6:0] out_seg7;
 	
-	bin_to_7seg test(.w_bcd(stim_bcd), .w_seg7(stim_seg7));
+	bin_to_7seg test(.w_bcd(stim_bcd), .w_seg7(out_seg7));
 	
 	initial
 	begin
-		stim_bcd = 4'd13;
-		#5 stim_bcd = 4'd4;
-		#5 stim_bcd = 4'd8;
+		for (int i=0; i<16; i++)
+		begin
+			#5 stim_bcd = i;
+		end
 	end
 endmodule
 // 0000 -> 1111110 = 62
