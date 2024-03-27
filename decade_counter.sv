@@ -2,79 +2,28 @@ module decade_counter(
 	input rst_n,
 	input mode,
 	input clk,
-	output logic [6:0] seg7_7,
-	output logic [6:0] seg7_6,
-	output logic [6:0] seg7_5,
-	output logic [6:0] seg7_4,
-	output logic [6:0] seg7_3,
-	output logic [6:0] seg7_2,
-	output logic [6:0] seg7_1,
-	output logic [6:0] seg7_0
-);
+	input butt_increase,
+	input butt_decrease,
+	input butt_change,
+	output logic [6:0] seg0,
+	output logic [6:0] seg1,
+	output logic [6:0] seg2,
+	output logic [6:0] seg3,
+	output logic [6:0] seg4,
+	output logic [6:0] seg5,
+	output logic [6:0] seg6,
+	output logic [6:0] seg7);
+
+	/***********************************************************
+						Logic and computing
+	***********************************************************/
 	reg [5:0] sec_bin;
 	reg [5:0] min_bin;
 	reg [4:0] hour_bin;
+
 	reg [4:0] day_bin;
 	reg [3:0] month_bin;
 	reg [13:0] year_bin;
-	logic [3:0] sec1, sec0, min1, min0, hr1, hr0, day1, day0, month1, month0, year3, year2, year1, year0;
-	logic [6:0] sec_7seg1, sec_7seg0, min_7seg1, min_7seg0, hour_7seg1, hour_7seg0, day_7seg1, day_7seg0, month_7seg1, month_7seg0, year_7seg3, year_7seg2, year_7seg1, year_7seg0;
-	
-	assign sec1 = sec_bin/10;
-	assign sec0 = sec_bin%10;
-	assign min1 = min_bin/10;
-	assign min0 = min_bin%10;
-	assign hr1 = hour_bin/10;
-	assign hr0 = hour_bin%10;
-	assign day1 = day_bin/10;
-	assign day0 = day_bin%10;
-	assign month1 = month_bin/10;
-	assign month0 = month_bin%10;
-	assign year3 = year_bin/1000;
-	assign year2 = (year_bin%1000)/100;
-	assign year1 = (year_bin%100)/10;
-	assign year0 = year_bin%10;
-	
-	bin_to_7seg day1_dis (.w_bcd(day1), .w_seg7(day_7seg1));
-	bin_to_7seg day0_dis (.w_bcd(day0), .w_seg7(day_7seg0));
-	bin_to_7seg month1_dis (.w_bcd(month1), .w_seg7(month_7seg1));
-	bin_to_7seg month0_dis (.w_bcd(month0), .w_seg7(month_7seg0));
-	bin_to_7seg year3_dis (.w_bcd(year3), .w_seg7(year_7seg3));
-	bin_to_7seg year2_dis (.w_bcd(year2), .w_seg7(year_7seg2));
-	bin_to_7seg year1_dis (.w_bcd(year1), .w_seg7(year_7seg1));
-	bin_to_7seg year0_dis (.w_bcd(year0), .w_seg7(year_7seg0));
-	bin_to_7seg sec1_dis (.w_bcd(sec1), .w_seg7(sec_7seg1));
-	bin_to_7seg sec0_dis (.w_bcd(sec0), .w_seg7(sec_7seg0));
-	bin_to_7seg min1_dis (.w_bcd(min1), .w_seg7(min_7seg1));
-	bin_to_7seg min0_dis (.w_bcd(min0), .w_seg7(min_7seg0));
-	bin_to_7seg hr1_dis (.w_bcd(hr1), .w_seg7(hour_7seg1));
-	bin_to_7seg hr0_dis (.w_bcd(hr0), .w_seg7(hour_7seg0));
-	
-	always @(mode)
-	begin
-		if (mode==1) //calendar display
-		begin
-			seg7_7 <= day_7seg1;
-			seg7_6 <= day_7seg0;
-			seg7_5 <= month_7seg1;
-			seg7_4 <= month_7seg0;
-			seg7_3 <= year_7seg3;
-			seg7_2 <= year_7seg2;
-			seg7_1 <= year_7seg1;
-			seg7_0 <= year_7seg0;
-		end
-		else //time display
-		begin 
-			seg7_7 <= hour_7seg1;
-			seg7_6 <= hour_7seg0;
-			seg7_5 <= min_7seg1;
-			seg7_4 <= min_7seg0;
-			seg7_3 <= sec_7seg1;
-			seg7_2 <= sec_7seg0;
-			seg7_1 <= 0;
-			seg7_0 <= 0;
-		end
-	end
 	
 	always @(posedge clk or negedge rst_n)
 	begin
@@ -97,9 +46,7 @@ module decade_counter(
 		end
 		else
 		begin
-			/***********************************************************
-									TIME BLOCK
-			***********************************************************/
+			/********************   TIME BLOCK   ********************/
 			if (hour_bin == 5'd23 && min_bin == 6'd59 && sec_bin == 6'd59) 
 			begin
 
@@ -133,6 +80,7 @@ module decade_counter(
 			
 			end
 
+			/********************   TIME BLOCK   ********************/
 			/***********************************************************
 									DATE BLOCK
 			***********************************************************/
@@ -195,3 +143,64 @@ module bin_to_7seg(
 endmodule : bin_to_7seg
 
 
+/* Valley of death
+
+logic [3:0] sec1, sec0, min1, min0, hr1, hr0, day1, day0, month1, month0, year3, year2, year1, year0;
+	logic [6:0] sec_7seg1, sec_7seg0, min_7seg1, min_7seg0, hour_7seg1, hour_7seg0, day_7seg1, day_7seg0, month_7seg1, month_7seg0, year_7seg3, year_7seg2, year_7seg1, year_7seg0;
+	
+	assign sec1 = sec_bin/10;
+	assign sec0 = sec_bin%10;
+	assign min1 = min_bin/10;
+	assign min0 = min_bin%10;
+	assign hr1 = hour_bin/10;
+	assign hr0 = hour_bin%10;
+	assign day1 = day_bin/10;
+	assign day0 = day_bin%10;
+	assign month1 = month_bin/10;
+	assign month0 = month_bin%10;
+	assign year3 = year_bin/1000;
+	assign year2 = (year_bin%1000)/100;
+	assign year1 = (year_bin%100)/10;
+	assign year0 = year_bin%10;
+	
+	bin_to_7seg day1_dis (.w_bcd(day1), .w_seg7(day_7seg1));
+	bin_to_7seg day0_dis (.w_bcd(day0), .w_seg7(day_7seg0));
+	bin_to_7seg month1_dis (.w_bcd(month1), .w_seg7(month_7seg1));
+	bin_to_7seg month0_dis (.w_bcd(month0), .w_seg7(month_7seg0));
+	bin_to_7seg year3_dis (.w_bcd(year3), .w_seg7(year_7seg3));
+	bin_to_7seg year2_dis (.w_bcd(year2), .w_seg7(year_7seg2));
+	bin_to_7seg year1_dis (.w_bcd(year1), .w_seg7(year_7seg1));
+	bin_to_7seg year0_dis (.w_bcd(year0), .w_seg7(year_7seg0));
+	bin_to_7seg sec1_dis (.w_bcd(sec1), .w_seg7(sec_7seg1));
+	bin_to_7seg sec0_dis (.w_bcd(sec0), .w_seg7(sec_7seg0));
+	bin_to_7seg min1_dis (.w_bcd(min1), .w_seg7(min_7seg1));
+	bin_to_7seg min0_dis (.w_bcd(min0), .w_seg7(min_7seg0));
+	bin_to_7seg hr1_dis (.w_bcd(hr1), .w_seg7(hour_7seg1));
+	bin_to_7seg hr0_dis (.w_bcd(hr0), .w_seg7(hour_7seg0));
+
+	always @(mode)
+	begin
+		if (mode==1)// date display
+		begin
+			seg7 <= day_1;
+			seg6 <= day_0;
+			seg5 <= month_1;
+			seg4 <= month_0;
+			seg3 <= year_3;
+			seg2 <= year_2;
+			seg1 <= year_1;
+			seg0 <= year_0;
+		end
+		else		// time display
+		begin 
+			seg7 <= hour_7seg1;
+			seg6 <= hour_7seg0;
+			seg5 <= min_7seg1;
+			seg4 <= min_7seg0;
+			seg3 <= sec_7seg1;
+			seg2 <= sec_7seg0;
+			seg1 <= 7'b1111111;	// turn off unused led
+			seg0 <= 7'b1111111; // turn off unused led
+		end
+	end
+*/
