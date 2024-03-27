@@ -1,6 +1,6 @@
 module decade_counter(
 	input rst_n,
-	input mode,
+	input sw_mode,
 	input clk,
 	input butt_increase,
 	input butt_decrease,
@@ -14,9 +14,7 @@ module decade_counter(
 	output logic [6:0] seg6,
 	output logic [6:0] seg7);
 
-	/***********************************************************
-						Logic and computing
-	***********************************************************/
+	// register storing time and date
 	reg [5:0] sec_bin;
 	reg [5:0] min_bin;
 	reg [4:0] hour_bin;
@@ -27,6 +25,19 @@ module decade_counter(
 	
 	always @(posedge clk or negedge rst_n)
 	begin
+		/***********************************************************
+							CLOCK CONTROL
+		***********************************************************/
+
+
+		/***********************************************************
+							CHANGING MODE
+		***********************************************************/
+
+
+		/***********************************************************
+							LOGIC AND COMPUTNG
+		***********************************************************/
 		if (~rst_n)
 		begin //reset to 00:00:00, 01/01/2024
 			sec_bin 	<= 	6'd00;
@@ -90,26 +101,84 @@ module decade_counter(
 			begin
 				if (day_bin == 5'd30) 
 				begin
-					day_bin <= 5'd1;  
-					month_bin <= month_bin + 1;
+					day_bin 	<= 5'd1;  
+					month_bin 	<= month_bin + 1;
 				end
 			end
-			else if ((dayChange == 1) && (month_bin == 4'd2))
+			else if ((dayChange == 1) && (month_bin == 4'd2))		// FEB
 			begin
-				if (!year_bin%4 && day_bin==5'd29) 
+				if ((year_bin % 14'd4 == 0) && (year_bin % 14'd100 != 0) && (day_bin == 5'd29)) 
 				begin 
-					day_bin <= 5'd1;  month_bin <= month_bin + 1;
+					day_bin 	<= 5'd1;  
+					month_bin 	<= month_bin + 1;
 				end
-				else if (year_bin%4&&day_bin==5'd28) 
+				else if (day_bin == 5'd28) 
 				begin 
-					day_bin <= 5'd1;  month_bin <= month_bin + 1;
+					day_bin 	<= 5'd1;  
+					month_bin 	<= month_bin + 1;
 				end
 			end 
-			if (month_bin==4'd12) 
-			begin 
-				month_bin <= 1; year_bin <= year_bin + 1;
-			end
-			if (year_bin==14'd9999) year_bin <= 14'd0;
+		end
+		/***********************************************************
+								DISPLAYING
+		***********************************************************/
+
+		/********************   TIME BLOCK   ********************/
+		logic [3:0] hour1, hour0, min1, min0, sec1, sec0;
+
+		assign hour1 	= hour 	/ 10;
+		assign hour0 	= hour 	- hour1 * 10;
+
+		assign min1 	= min 	/ 10;
+		assign min0 	= min 	- min1 	* 10;
+		
+		assign sec1 	= sec 	/ 10;
+		assign sec0 	= sec 	- sec1 	* 10;
+
+		/********************   DATE BLOCK   ********************/
+		logic [3:0] day1, day0, month1, month0, year3, year2, year1, year0;
+
+		assign day1 	= day 	/ 10;
+		assign day0 	= day 	- day1 * 10;
+		
+		assign month1 	= month / 10;
+		assign month0 	= month - month1 * 10;
+		
+		assign year3 	=  year	/ 1000;
+		assign year2 	= (year - year1 * 1000) / 100;
+		assign year1 	= (year - year1 * 1000 	- year2 * 100) 	/ 10;
+		assign year0 	= (year - year1 * 1000 	- year2 * 100 	- year1 * 10);
+
+		/***************   OUT TO SEVEN SEGMENT   ***************/
+		if (sw_mode) 	
+		// 1 to display date 
+		begin
+			bin_to_7seg date_display_7 (.bcd(day1), .seg7(seg7));
+			bin_to_7seg date_display_6 (.bcd(day0), .seg7(seg6));
+			
+			bin_to_7seg date_display_5 (.bcd(month1), .seg7(seg5));
+			bin_to_7seg date_display_4 (.bcd(month0), .seg7(seg4));
+			
+			bin_to_7seg date_display_3 (.bcd(year3), .seg7(seg3));
+			bin_to_7seg date_display_2 (.bcd(year2), .seg7(seg2));
+			bin_to_7seg date_display_1 (.bcd(year1), .seg7(seg1));
+			bin_to_7seg date_display_0 (.bcd(year0), .seg7(seg0));
+
+
+		end
+		// 0 to display time
+		else begin
+			bin_to_7seg date_display_7 (.bcd(hour1), .seg7(seg7));
+			bin_to_7seg date_display_6 (.bcd(hour0), .seg7(seg6));
+			
+			bin_to_7seg date_display_5 (.bcd(min1), .seg7(seg5));
+			bin_to_7seg date_display_4 (.bcd(min0), .seg7(seg4));
+			
+			bin_to_7seg date_display_3 (.bcd(sec1), .seg7(seg3));
+			bin_to_7seg date_display_2 (.bcd(sec0), .seg7(seg2));
+			bin_to_7seg date_display_1 (.bcd(4'b1110), .seg7(seg1));
+			bin_to_7seg date_display_0 (.bcd(4'b1110), .seg7(seg0));
+
 		end
 	end
 endmodule
@@ -118,24 +187,24 @@ endmodule
 								7 SEGMENT DECODER
 *****************************************************************************************/
 module bin_to_7seg(	
-	input [3:0] w_bcd,
-	output logic [6:0] w_seg7
+	input [3:0] bcd,
+	output logic [6:0] seg7
 );
 	// seven segggggment display
-	always @(w_bcd)
+	always @(bcd)
 	begin
-		case(w_bcd)
-			4'd0: w_seg7 <= ~7'b0111111;
-			4'd1: w_seg7 <= ~7'b0000110;   
-			4'd2: w_seg7 <= ~7'b1011011;   
-			4'd3: w_seg7 <= ~7'b1001111;    
-			4'd4: w_seg7 <= ~7'b1100110; 
-			4'd5: w_seg7 <= ~7'b1101101;  
-			4'd6: w_seg7 <= ~7'b1111101;    
-			4'd7: w_seg7 <= ~7'b0000111;   
-			4'd8: w_seg7 <= ~7'b1111111; 
-			4'd9: w_seg7 <= ~7'b1101111;  
-			default : w_seg7 <= 7'b0000000;
+		case(bcd)
+			4'd0: seg7 <= ~7'b0111111;
+			4'd1: seg7 <= ~7'b0000110;   
+			4'd2: seg7 <= ~7'b1011011;   
+			4'd3: seg7 <= ~7'b1001111;    
+			4'd4: seg7 <= ~7'b1100110; 
+			4'd5: seg7 <= ~7'b1101101;  
+			4'd6: seg7 <= ~7'b1111101;    
+			4'd7: seg7 <= ~7'b0000111;   
+			4'd8: seg7 <= ~7'b1111111; 
+			4'd9: seg7 <= ~7'b1101111;  
+			default : seg7 <= 7'b0000000;
 		endcase
 	end
 
