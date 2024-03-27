@@ -2,12 +2,20 @@ module decade_counter(
 	input rst_n,
 	input mode,
 	input clk,
-	output logic [7:0] sec_7seg,
-	output logic [7:0] min_7seg,
-	output logic [7:0] hour_7seg,
-	output logic [7:0] day_7seg,
-	output logic [7:0] month_7seg,
-	output logic [7:0] year_7seg
+	output logic [6:0] sec_7seg1,
+	output logic [6:0] sec_7seg0,
+	output logic [6:0] min_7seg1,
+	output logic [6:0] min_7seg0,
+	output logic [6:0] hour_7seg1,
+	output logic [6:0] hour_7seg0,
+	output logic [6:0] day_7seg1,
+	output logic [6:0] day_7seg0,
+	output logic [6:0] month_7seg1,
+	output logic [6:0] month_7seg0,
+	output logic [6:0] year_7seg3,
+	output logic [6:0] year_7seg2,
+	output logic [6:0] year_7seg1,
+	output logic [6:0] year_7seg0
 );
 	reg [5:0] sec_bin;
 	reg [5:0] min_bin;
