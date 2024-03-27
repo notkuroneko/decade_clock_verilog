@@ -16,8 +16,8 @@ module decade_counter
 	output logic [6:0] seg4,
 	output logic [6:0] seg5,
 	output logic [6:0] seg6,
-	output logic [6:0] seg7
-);
+	output logic [6:0] seg7);
+
 	logic [4:0] hour;
 	logic [5:0] min;
 	logic [5:0] sec;
@@ -65,10 +65,10 @@ module decade_counter
 	// 2'b11 - Adjust sec/day
 	
 	always_ff @(posedge clk or negedge reset_n) begin
-	  if(~reset_n) begin
-		 set_time <= 0;
+		if(~reset_n) begin
+			set_time <= 0;
 	  end else if (btn_settime) begin
-		 set_time <= set_time + 1;
+			set_time <= set_time + 1;
 	  end
 	end
 
@@ -76,12 +76,14 @@ module decade_counter
 	//                       CONTROL CLOCK                            
 	//****************************************************************
 	always_ff @(posedge clk or negedge reset_n) begin 
-	  if(~reset_n) begin
-		 hour  <= 0;
-		 min   <= 0;
-		 sec   <= 0;
+	  if(~reset_n) 
+	  begin
+			hour  <= 0;
+			min   <= 0;
+			sec   <= 0;
 	  end 
-	  else if (!sw_mode & |set_time) begin
+	  else if (!sw_mode & |set_time) 
+	  begin
 		 if (db_btn_inc) begin
 			case (set_time)
 			  2'b01: sec <= (sec == 59) ? 0 : sec + 1'b1;
