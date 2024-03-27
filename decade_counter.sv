@@ -68,24 +68,35 @@ module decade_counter(
 			/********************   DATE BLOCK   ********************/
 			reg dayChange;
 			assign dayChange = ((hour_bin == 5'd23) && (min_bin == 6'd59) && (sec_bin == 6'd59);
-			if ((dayChange)&&(month_bin==4'd1||month_bin==4'd3||month_bin==4'd5||month_bin==4'd7||month_bin==4'd8||month_bin==4'd10))
+			
+			if ((dayChange == 1) && (month_bin == 4'd12) && (day_bin == 5'd31))
 			begin
-				if (day_bin==5'd31) 
-				begin 
-					day_bin <= 5'd1; 
-					month_bin <= month_bin + 1;
-				end;
+				day_bin		<=	5'd01;
+				month_bin	<=	4'd01;
+				year_bin	<=	year_bin + 14'd1;
 			end
-			else if (month_bin==4'd4||month_bin==4'd6||month_bin==4'd9||month_bin==4'd11)
+			else if ((dayChange == 1) && (	month_bin == 4'd1 || month_bin == 4'd3 || 
+											month_bin == 4'd5 || month_bin == 4'd7 ||
+										 	month_bin == 4'd8 || month_bin == 4'd10 ))
 			begin
-				if (day_bin==5'd30) 
-				begin
-					day_bin <= 5'd1;  month_bin <= month_bin + 1;
+				if (day_bin == 5'd31) 
+				begin 
+					day_bin 	<= 5'd1; 
+					month_bin 	<= month_bin + 1;
 				end
 			end
-			else if (month_bin==4'd2)
+			else if ((dayChange == 1) && ( 	month_bin == 4'd4 || month_bin == 4'd6 || 
+											month_bin == 4'd9 || month_bin == 4'd11 ))
 			begin
-				if (!year_bin%4&&day_bin==5'd29) 
+				if (day_bin == 5'd30) 
+				begin
+					day_bin <= 5'd1;  
+					month_bin <= month_bin + 1;
+				end
+			end
+			else if ((dayChange == 1) && (month_bin == 4'd2))
+			begin
+				if (!year_bin%4 && day_bin==5'd29) 
 				begin 
 					day_bin <= 5'd1;  month_bin <= month_bin + 1;
 				end
