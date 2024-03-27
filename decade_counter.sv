@@ -35,13 +35,13 @@ module decade_counter(
 			hour_7seg1 <= 0;
 			hour_7seg0 <= 0;
 			day_7seg1 <= 0;
-			day_7seg0 <= 0;
+			day_7seg0 <= 1;
 			month_7seg1 <= 0;
-			month_7seg0 <= 0;
-			year_7seg3 <= 0;
+			month_7seg0 <= 1;
+			year_7seg3 <= 2;
 			year_7seg2 <= 0;
-			year_7seg1 <= 0;
-			year_7seg0 <= 0;
+			year_7seg1 <= 2;
+			year_7seg0 <= 4;
 		end
 		else
 		begin
