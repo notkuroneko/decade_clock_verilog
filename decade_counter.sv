@@ -35,7 +35,7 @@ module decade_counter(
 			if (hour_bin == 5'd23 && min_bin == 6'd59 && sec_bin == 6'd59) 
 			begin
 
-				day_bin <= day_bin + 1;
+				day_bin <= day_bin + 5'd1;
 				
 				hour_bin <= 5'd0;
 				min_bin <= 6'd0;
@@ -45,7 +45,7 @@ module decade_counter(
 			else if (min_bin == 6'd59 && sec_bin == 6'd59) 
 			begin
 
-				hour_bin <= hour_bin + 1;
+				hour_bin <= hour_bin + 5'd1;
 
 				min_bin <= 6'd0;
 				sec_bin <= 6'd0;
@@ -54,14 +54,14 @@ module decade_counter(
 			else if (sec_bin == 6'd59) 
 			begin
 
-				min_bin <= min_bin + 1;
-				
+				min_bin <= min_bin + 6'd1;
+
 				sec_bin <= 6'd0;
 
 			end
 			else begin
 			
-				sec_bin <= sec_bin + 1;
+				sec_bin <= sec_bin + 6'd1;
 			
 			end
 
