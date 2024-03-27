@@ -29,7 +29,38 @@ module decade_counter(
 		end
 		else
 		begin
-			day_bin <= day_bin + 1; //day block
+			/***********************************************************
+									TIME BLOCK
+			***********************************************************/
+			sec_bin <= seg_bin + 1;
+			
+			if (hour_bin == 5'd23 && min_bin == 6'd59 && sec_bin == 6'd59) 
+			begin
+
+				day_bin <= day_bin + 1;
+			
+			end
+			else if (min_bin == 6'd59 && sec_bin == 6'd59) 
+			begin
+
+				hour_bin <= hour_bin + 1;
+
+			end
+			else if (sec_bin == 6'd59) 
+			begin
+
+				min_bin <= min_bin + 1;
+
+			end
+			else begin
+			
+				sec_bin <= sec_bin + 1;
+			
+			end
+
+			/***********************************************************
+									DATE BLOCK
+			***********************************************************/
 			if (month_bin==4'd1||month_bin==4'd3||month_bin==4'd5||month_bin==4'd7||month_bin==4'd8||month_bin==4'd10||month_bin==4'd12)
 			begin
 				if (day_bin==5'd31) {day_bin <= 5'd1; month_bin <= month_bin + 1}
