@@ -29,7 +29,7 @@ module decade_counter(
 							CLOCK CONTROL
 		***********************************************************/
 		reg tick_1s;
-		delay #(26'd49_999_999,26) delay1s (.delay(tick_1s), .CLOCK_50MHZ(clk));
+		delay delay1s #(26'd49_999_999,26)(.delay(tick_1s), .CLOCK_50MHZ(clk));
 
 		/***********************************************************
 							CHANGING MODE
