@@ -22,15 +22,17 @@ module decade_counter(
 	reg [4:0] day_bin;
 	reg [3:0] month_bin;
 	reg [13:0] year_bin;
+
+	reg dayChange;
+	assign dayChange = ((hour_bin == 5'd23) && (min_bin == 6'd59) && (sec_bin == 6'd59));
+	/***********************************************************
+						CLOCK CONTROL
+	***********************************************************/
+	reg tick_1s;
+	delay #(26'd49_999_999,26) delay1s (.delay(tick_1s), .reset_n(rst_n), .CLOCK_50MHZ(clk));
 	
 	always @(posedge clk or negedge rst_n)
 	begin
-		/***********************************************************
-							CLOCK CONTROL
-		***********************************************************/
-		reg tick_1s;
-		delay #(26'd49_999_999,26) delay1s (.delay(tick_1s), .CLOCK_50MHZ(clk));
-
 		/***********************************************************
 							CHANGING MODE
 		***********************************************************/
@@ -51,7 +53,7 @@ module decade_counter(
 		else
 		begin
 			/********************   TIME BLOCK   ********************/
-			if (tick1s)
+			if (tick_1s)
 			begin
 				if (hour_bin == 5'd23 && min_bin == 6'd59 && sec_bin == 6'd59) 
 				begin
@@ -81,8 +83,8 @@ module decade_counter(
 			end
 
 			/********************   DATE BLOCK   ********************/
-			reg dayChange;
-			assign dayChange = ((hour_bin == 5'd23) && (min_bin == 6'd59) && (sec_bin == 6'd59);
+			
+
 			
 			if ((dayChange == 1) && (month_bin == 4'd12) && (day_bin == 5'd31))
 			begin
@@ -123,66 +125,88 @@ module decade_counter(
 				end
 			end 
 		end
-		/***********************************************************
-								DISPLAYING
-		***********************************************************/
+	end
 
-		/********************   TIME BLOCK   ********************/
-		logic [3:0] hour1, hour0, min1, min0, sec1, sec0;
+	/***********************************************************
+							DISPLAYING
+	***********************************************************/
 
-		assign hour1 	= hour 	/ 10;
-		assign hour0 	= hour 	- hour1 * 10;
+	/********************   TIME BLOCK   ********************/
+	logic [3:0] hour1, hour0, min1, min0, sec1, sec0;
+	logic [5:0][3:0] value_clock;
+	logic [5:0][6:0] seg7_clock;
+	assign value_clock ={hour1, hour0, min1, min0, sec1, sec0};
 
-		assign min1 	= min 	/ 10;
-		assign min0 	= min 	- min1 	* 10;
-		
-		assign sec1 	= sec 	/ 10;
-		assign sec0 	= sec 	- sec1 	* 10;
+	assign hour1 	= hour_bin / 10;
+	assign hour0 	= hour_bin - hour1 * 10;
 
-		/********************   DATE BLOCK   ********************/
-		logic [3:0] day1, day0, month1, month0, year3, year2, year1, year0;
+	assign min1 	= min_bin / 10;
+	assign min0 	= min_bin - min1 	* 10;
+	
+	assign sec1 	= sec_bin / 10;
+	assign sec0 	= sec_bin - sec1 	* 10;
 
-		assign day1 	= day 	/ 10;
-		assign day0 	= day 	- day1 * 10;
-		
-		assign month1 	= month / 10;
-		assign month0 	= month - month1 * 10;
-		
-		assign year3 	=  year	/ 1000;
-		assign year2 	= (year - year1 * 1000) / 100;
-		assign year1 	= (year - year1 * 1000 	- year2 * 100) 	/ 10;
-		assign year0 	= (year - year1 * 1000 	- year2 * 100 	- year1 * 10);
+	genvar i;
+	generate
+	  for (i = 0; i <= 5; i++) begin : displayTime
+		 bin_to_7seg seg_clock (
+			.bcd (value_clock[i]),
+			.seg7(seg7_clock[i]));
+	  end
+	endgenerate
 
-		/***************   OUT TO SEVEN SEGMENT   ***************/
-		if (sw_mode) 	
-		// 1 to display date 
+	/********************   DATE BLOCK   ********************/
+	logic [3:0] day1, day0, month1, month0, year3, year2, year1, year0;
+	logic [7:0][3:0] value_calen;
+	logic [7:0][6:0] seg7_calen;
+	assign value_calen = {day1, day0, month1, month0, year3, year2, year1, year0};
+
+	assign day1 	= day_bin / 10;
+	assign day0 	= day_bin - day1 * 10;
+	
+	assign month1 	= month_bin / 10;
+	assign month0 	= month_bin - month1 * 10;
+	
+	assign year3 	=  year_bin	/ 1000;
+	assign year2 	= (year_bin - year3 * 1000) / 100;
+	assign year1 	= (year_bin - year3 * 1000 	- year2 * 100) 	/ 10;
+	assign year0 	= (year_bin - year3 * 1000 	- year2 * 100 	- year1 * 10);
+
+	genvar j;
+	generate
+	  for (j = 0; j <= 7; j++) begin : displayDate
+		 bin_to_7seg seg_calen (
+			.bcd (value_calen[j]),
+			.seg7(seg7_calen[j])
+			);
+	  end
+	endgenerate
+
+	
+
+	/***************   OUT TO SEVEN SEGMENT   ***************/
+	always_comb begin
+		if (sw_mode) 
 		begin
-			bin_to_7seg date_display_7 (.bcd(day1), .seg7(seg7));
-			bin_to_7seg date_display_6 (.bcd(day0), .seg7(seg6));
-			
-			bin_to_7seg date_display_5 (.bcd(month1), .seg7(seg5));
-			bin_to_7seg date_display_4 (.bcd(month0), .seg7(seg4));
-			
-			bin_to_7seg date_display_3 (.bcd(year3), .seg7(seg3));
-			bin_to_7seg date_display_2 (.bcd(year2), .seg7(seg2));
-			bin_to_7seg date_display_1 (.bcd(year1), .seg7(seg1));
-			bin_to_7seg date_display_0 (.bcd(year0), .seg7(seg0));
-
-
+			seg7 = seg7_calen[7];
+			seg6 = seg7_calen[6];
+			seg5 = seg7_calen[5];
+			seg4 = seg7_calen[4];
+			seg3 = seg7_calen[3];
+			seg2 = seg7_calen[2];
+			seg1 = seg7_calen[1];
+			seg0 = seg7_calen[0];
 		end
-		// 0 to display time
-		else begin
-			bin_to_7seg date_display_7 (.bcd(hour1), .seg7(seg7));
-			bin_to_7seg date_display_6 (.bcd(hour0), .seg7(seg6));
-			
-			bin_to_7seg date_display_5 (.bcd(min1), .seg7(seg5));
-			bin_to_7seg date_display_4 (.bcd(min0), .seg7(seg4));
-			
-			bin_to_7seg date_display_3 (.bcd(sec1), .seg7(seg3));
-			bin_to_7seg date_display_2 (.bcd(sec0), .seg7(seg2));
-			bin_to_7seg date_display_1 (.bcd(4'b1110), .seg7(seg1));
-			bin_to_7seg date_display_0 (.bcd(4'b1110), .seg7(seg0));
-
+		else 
+		begin
+			seg7 = seg7_clock[5];
+			seg6 = seg7_clock[4];
+			seg5 = seg7_clock[3];
+			seg4 = seg7_clock[2];
+			seg3 = seg7_clock[1];
+			seg2 = seg7_clock[0];
+			seg1 <= 7'b1111111;
+			seg0 <= 7'b1111111;
 		end
 	end
 endmodule
@@ -220,23 +244,28 @@ endmodule : bin_to_7seg
 *****************************************************************************************/
 module delay #(parameter COUNT  = 26'd49_999_999,
 			   parameter COUNTW = 26)
-			(delay, CLOCK_50MHZ);
+			(delay, reset_n,CLOCK_50MHZ);
+
 	output reg delay;
 	input CLOCK_50MHZ;
+	input reset_n;
 	
 	reg [COUNTW - 1 : 0] count;
 	
-	always @(posedge CLOCK_50MHZ)
+	always @(posedge CLOCK_50MHZ or negedge reset_n)
 	begin
-		if(count == COUNT)
+		if(~reset_n)
 		begin
-			count <= COUNTW'd0;
-			delay <= 1;
+			count <= 0;
+		end
+		else if(count == COUNT)
+		begin
+			count <= 1'd0;
 		end
 		else
 		begin
 			count <= count + 1;
-			delay <= 0;
 		end
 	end
+	assign delay = count == COUNT;
 endmodule : delay
