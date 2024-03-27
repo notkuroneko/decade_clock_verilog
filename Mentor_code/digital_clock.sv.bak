@@ -82,7 +82,8 @@ module decade_counter
 			min   <= 0;
 			sec   <= 0;
 	  end 
-	  else if (!sw_mode & |set_time) begin
+	  else if (!sw_mode & |set_time) 
+	  begin
 		 if (db_btn_inc) begin
 			case (set_time)
 			  2'b01: sec <= (sec == 59) ? 0 : sec + 1'b1;
@@ -100,22 +101,22 @@ module decade_counter
 	  end
 	  else if (tick_1s) begin
 		  if ((hour == 5'd23) & (min == 6'd59) & (sec == 6'd59)) begin
-				hour <= 0;
-				min <= 0;
-				sec <= 0;
-		 	end
-		 	else if ((min == 6'd59) & (sec == 6'd59)) begin
-				hour <= hour + 5'd1;
-				min <= 0;
-				sec <= 0;
-		 	end
-		 	else if ((sec == 6'd59)) begin
-				min <= min + 6'd1;
-				sec <= 0;
-		 	end
-		 	else begin
-				sec <= sec + 6'd1;
-		 	end
+			hour <= 0;
+			min <= 0;
+			sec <= 0;
+		 end
+		 else if ((min == 6'd59) & (sec == 6'd59)) begin
+			hour <= hour + 5'd1;
+			min <= 0;
+			sec <= 0;
+		 end
+		 else if ((sec == 6'd59)) begin
+			min <= min + 6'd1;
+			sec <= 0;
+		 end
+		 else begin
+			sec <= sec + 6'd1;
+		 end
 	  end
 	end
 	//****************************************************************
@@ -261,10 +262,10 @@ module decade_counter
 	assign day0 = day - day1 * 10;
 	assign month1 = month/10;
 	assign month0 = month - month1 * 10;
-	assign year3 	=  year	/ 1000;
-	assign year2 	= (year - year3 * 1000) / 100;
-	assign year1 	= (year - year3 * 1000 	- year2 * 100) 	/ 10;
-	assign year0 	= (year - year3 * 1000 	- year2 * 100 	- year1 * 10);
+	assign year3 	=  year_bin	/ 1000;
+	assign year2 	= (year_bin - year3 * 1000) / 100;
+	assign year1 	= (year_bin - year3 * 1000 	- year2 * 100) 	/ 10;
+	assign year0 	= (year_bin - year3 * 1000 	- year2 * 100 	- year1 * 10);
 	assign value_calen = {day1, day0, month1, month0, year3, year2, year1, year0};
 	
 	
