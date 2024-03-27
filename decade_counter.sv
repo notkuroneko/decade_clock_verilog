@@ -28,12 +28,20 @@ module decade_counter(
 	begin
 		if (~rst_n)
 		begin //reset to 00:00:00, 01/01/2024
-			sec_7seg <= 0;
-			min_7seg <= 0;
-			hour_7seg <= 0;
-			day_7seg <= 0;
-			month_7seg <= 0;
-			year_7seg <= 0;
+			sec_7seg1 <= 0;
+			sec_7seg0 <= 0;
+			min_7seg1 <= 0;
+			min_7seg0 <= 0;
+			hour_7seg1 <= 0;
+			hour_7seg0 <= 0;
+			day_7seg1 <= 0;
+			day_7seg0 <= 0;
+			month_7seg1 <= 0;
+			month_7seg0 <= 0;
+			year_7seg3 <= 0;
+			year_7seg2 <= 0;
+			year_7seg1 <= 0;
+			year_7seg0 <= 0;
 		end
 		else
 		begin
