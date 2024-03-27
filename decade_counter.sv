@@ -29,66 +29,51 @@ module decade_counter(
 	begin
 		if (~rst_n)
 		begin //reset to 00:00:00, 01/01/2024
-			sec_7seg1 <= 0;
-			sec_7seg0 <= 0;
-			min_7seg1 <= 0;
-			min_7seg0 <= 0;
-			hour_7seg1 <= 0;
-			hour_7seg0 <= 0;
-			day_7seg1 <= 0;
-			day_7seg0 <= 1;
-			month_7seg1 <= 0;
-			month_7seg0 <= 1;
-			year_7seg3 <= 2;
-			year_7seg2 <= 0;
-			year_7seg1 <= 2;
-			year_7seg0 <= 4;
+			sec_bin 	<= 	6'd00;
+			min_bin 	<= 	6'd00;
+			hour_bin 	<= 	5'd00;
+			day_bin		<=	5'd01;
+			month_bin	<=	4'd01;
+			year_bin	<=	14'd2024;
 		end
 		else
 		begin
 			/********************   TIME BLOCK   ********************/
 			if (hour_bin == 5'd23 && min_bin == 6'd59 && sec_bin == 6'd59) 
 			begin
-
 				day_bin <= day_bin + 5'd1;
 				
 				hour_bin <= 5'd0;
 				min_bin <= 6'd0;
 				sec_bin <= 6'd0;
-			
 			end
 			else if (min_bin == 6'd59 && sec_bin == 6'd59) 
 			begin
-
 				hour_bin <= hour_bin + 5'd1;
 
 				min_bin <= 6'd0;
 				sec_bin <= 6'd0;
-
 			end
 			else if (sec_bin == 6'd59) 
 			begin
-
 				min_bin <= min_bin + 6'd1;
 
 				sec_bin <= 6'd0;
-
 			end
-			else begin
-			
+			else 
+			begin
 				sec_bin <= sec_bin + 6'd1;
-			
 			end
 
-			/********************   TIME BLOCK   ********************/
-			/***********************************************************
-									DATE BLOCK
-			***********************************************************/
-			if (month_bin==4'd1||month_bin==4'd3||month_bin==4'd5||month_bin==4'd7||month_bin==4'd8||month_bin==4'd10||month_bin==4'd12)
+			/********************   DATE BLOCK   ********************/
+			reg dayChange;
+			assign dayChange = ((hour_bin == 5'd23) && (min_bin == 6'd59) && (sec_bin == 6'd59);
+			if ((dayChange)&&(month_bin==4'd1||month_bin==4'd3||month_bin==4'd5||month_bin==4'd7||month_bin==4'd8||month_bin==4'd10))
 			begin
 				if (day_bin==5'd31) 
 				begin 
-					day_bin <= 5'd1; month_bin <= month_bin + 1;
+					day_bin <= 5'd1; 
+					month_bin <= month_bin + 1;
 				end;
 			end
 			else if (month_bin==4'd4||month_bin==4'd6||month_bin==4'd9||month_bin==4'd11)
@@ -118,6 +103,9 @@ module decade_counter(
 	end
 endmodule
 
+/*****************************************************************************************
+								7 SEGMENT DECODER
+*****************************************************************************************/
 module bin_to_7seg(	
 	input [3:0] w_bcd,
 	output logic [6:0] w_seg7
