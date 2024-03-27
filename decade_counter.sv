@@ -49,26 +49,28 @@ module decade_counter(
 	end
 endmodule
 
-module bin_to_7seg (
+module bin_to_7seg(	
 	input [3:0] w_bcd,
 	output logic [6:0] w_seg7
 );
-	always @(w_bcd) 
+	// seven segggggment display
+	always @(w_bcd)
 	begin
-		case (w_bcd)
-			4'h0: w_seg7 = 7'b0111111;
-			4'h1: w_seg7 = 7'b0000110;
-			4'h2: w_seg7 = 7'b1011011;
-			4'h3: w_seg7 = 7'b1001111;
-			4'h4: w_seg7 = 7'b1100110;
-			4'h5: w_seg7 = 7'b1101101;
-			4'h6: w_seg7 = 7'b1111101;
-			4'h7: w_seg7 = 7'b0000111;
-			4'h8: w_seg7 = 7'b1111111;
-			4'h9: w_seg7 = 7'b1101111;
-			default: w_seg7 = 7'b0000000;
+		case(w_bcd)
+			4'd0: w_seg7 <= ~7'b0111111;
+			4'd1: w_seg7 <= ~7'b0000110;   
+			4'd2: w_seg7 <= ~7'b1011011;   
+			4'd3: w_seg7 <= ~7'b1001111;    
+			4'd4: w_seg7 <= ~7'b1100110; 
+			4'd5: w_seg7 <= ~7'b1101101;  
+			4'd6: w_seg7 <= ~7'b1111101;    
+			4'd7: w_seg7 <= ~7'b0000111;   
+			4'd8: w_seg7 <= ~7'b1111111; 
+			4'd9: w_seg7 <= ~7'b1101111;  
+			default : w_seg7 <= 7'b0000000;
 		endcase
 	end
-endmodule
+
+endmodule : bin_to_7seg
 
 
