@@ -63,18 +63,33 @@ module decade_counter(
 			***********************************************************/
 			if (month_bin==4'd1||month_bin==4'd3||month_bin==4'd5||month_bin==4'd7||month_bin==4'd8||month_bin==4'd10||month_bin==4'd12)
 			begin
-				if (day_bin==5'd31) {day_bin <= 5'd1; month_bin <= month_bin + 1}
+				if (day_bin==5'd31) 
+				begin 
+					day_bin <= 5'd1; month_bin <= month_bin + 1;
+				end;
 			end
 			else if (month_bin==4'd4||month_bin==4'd6||month_bin==4'd9||month_bin==4'd11)
 			begin
-				if (day_bin==5'd30) {day_bin <= 5'd1;  month_bin <= month_bin + 1}
+				if (day_bin==5'd30) 
+				begin
+					day_bin <= 5'd1;  month_bin <= month_bin + 1;
+				end
 			end
 			else if (month_bin==4'd2)
 			begin
-				if (!year_bin%4&&day_bin==5'd29) {day_bin <= 5'd1;  month_bin <= month_bin + 1}
-				else if (year_bin%4&&day_bin==5'd28) {day_bin <= 5'd1;  month_bin <= month_bin + 1}
+				if (!year_bin%4&&day_bin==5'd29) 
+				begin 
+					day_bin <= 5'd1;  month_bin <= month_bin + 1;
+				end
+				else if (year_bin%4&&day_bin==5'd28) 
+				begin 
+					day_bin <= 5'd1;  month_bin <= month_bin + 1;
+				end
+			end 
+			if (month_bin==4'd12) 
+			begin 
+				month_bin <= 1; year_bin <= year_bin + 1;
 			end
-			if (month_bin==4'd12) {month_bin <= 1; year_bin <= year_bin + 1}
 			if (year_bin==14'd9999) year_bin <= 14'd0;
 		end
 	end
