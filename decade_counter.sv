@@ -1,26 +1,35 @@
-module decade_counter_2(
-	input clk,
+module decade_counter(
 	input rst_n,
-	input mode,
-	output logic [6:0] seg7_7,
-	output logic [6:0] seg7_6,
-	output logic [6:0] seg7_5,
-	output logic [6:0] seg7_4,
-	output logic [6:0] seg7_3,
-	output logic [6:0] seg7_2,
-	output logic [6:0] seg7_1,
-	output logic [6:0] seg7_0
-);
+	input sw_mode,
+	input clk,
+	input butt_increase,
+	input butt_decrease,
+	input butt_change,
+	output logic [6:0] seg0,
+	output logic [6:0] seg1,
+	output logic [6:0] seg2,
+	output logic [6:0] seg3,
+	output logic [6:0] seg4,
+	output logic [6:0] seg5,
+	output logic [6:0] seg6,
+	output logic [6:0] seg7);
+	
+	/*************  SINGLE DIGITS  ****************/
 	reg [3:0] sec1; 
 	reg [3:0] sec0;
+
 	reg [3:0] min1;
 	reg [3:0] min0;
+	
 	reg [3:0] hour1;
 	reg [3:0] hour0;
+	
 	reg [3:0] day1;
 	reg [3:0] day0;
+	
 	reg [3:0] month1;
 	reg [3:0] month0;
+	
 	reg [3:0] year3;
 	reg [3:0] year2;
 	reg [3:0] year1;
@@ -217,25 +226,59 @@ module decade_counter_2(
 		end
 	end
 endmodule
-
-module bin_to_7seg (
-	input [3:0] w_bcd,
-	output logic [6:0] w_seg7
+*****************************************************************************************/
+module bin_to_7seg(	
+	input [3:0] bcd,
+	output logic [6:0] seg7
 );
-	always @(w_bcd) 
+	// seven segggggment display
+	always @(bcd)
 	begin
-		case (w_bcd)
-			4'h0: w_seg7 = ~7'b0111111;
-			4'h1: w_seg7 = ~7'b0000110;
-			4'h2: w_seg7 = ~7'b1011011;
-			4'h3: w_seg7 = ~7'b1001111;
-			4'h4: w_seg7 = ~7'b1100110;
-			4'h5: w_seg7 = ~7'b1101101;
-			4'h6: w_seg7 = ~7'b1111101;
-			4'h7: w_seg7 = ~7'b0000111;
-			4'h8: w_seg7 = ~7'b1111111;
-			4'h9: w_seg7 = ~7'b1101111;
-			default: w_seg7 = ~7'b0000000;
+		case(bcd)
+			4'd0: seg7 <= ~7'b0111111;
+			4'd1: seg7 <= ~7'b0000110;   
+			4'd2: seg7 <= ~7'b1011011;   
+			4'd3: seg7 <= ~7'b1001111;    
+			4'd4: seg7 <= ~7'b1100110; 
+			4'd5: seg7 <= ~7'b1101101;  
+			4'd6: seg7 <= ~7'b1111101;    
+			4'd7: seg7 <= ~7'b0000111;   
+			4'd8: seg7 <= ~7'b1111111; 
+			4'd9: seg7 <= ~7'b1101111;  
+			default : seg7 <= 7'b0000000;
 		endcase
 	end
-endmodule
+
+endmodule : bin_to_7seg
+
+
+/*****************************************************************************************
+								DELAY
+*****************************************************************************************/
+module delay #(parameter COUNT  = 26'd49_999_999,
+			   parameter COUNTW = 26)
+			(delay, reset_n,CLOCK_50MHZ);
+
+	output reg delay;
+	input CLOCK_50MHZ;
+	input reset_n;
+	
+	reg [COUNTW - 1 : 0] count;
+	
+	always @(posedge CLOCK_50MHZ or negedge reset_n)
+	begin
+		if(~reset_n)
+		begin
+			count <= 0;
+		end
+		else if(count == COUNT)
+		begin
+			count <= 1'd0;
+		end
+		else
+		begin
+			count <= count + 1;
+		end
+	end
+	assign delay = count == COUNT;
+endmodule : delay
