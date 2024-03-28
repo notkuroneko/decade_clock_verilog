@@ -1,10 +1,10 @@
 module decade_counter(
 	input 	rst_n,
-	input 	sw_mode,
+	input 	sw_mode,			// sw = switch
 	input	sw_speed,
 	input 	clk,
-	input 	butt_increase,
-	input 	butt_decrease,
+	input 	butt_increase,		// butt = button (p33 user_man)
+	input 	butt_decrease,		// butt press = 0, release = 1
 	input 	butt_change,
 	output logic [6:0] seg0,
 	output logic [6:0] seg1,
@@ -14,14 +14,41 @@ module decade_counter(
 	output logic [6:0] seg5,
 	output logic [6:0] seg6,
 	output logic [6:0] seg7);
+
 	
 	/*************  CLOCK CONTROL  ****************/
+	
+	// core clock
 	reg tick_1s;
-	delay #(26'd49_999_999,26) delay1s (.delay(tick_1s), .reset_n(rst_n), .CLOCK_50MHZ(clk));
+	delay #(26'd49_999_999,26) delay1s (	.delay(tick_1s), 
+											.reset_n(rst_n), 
+											.CLOCK_50MHZ(clk), 
+											.en(1));
 	reg tick_0_1s;
-	delay #(26'd499,26) delay_half_s (.delay(tick_0_1s), .reset_n(rst_n), .CLOCK_50MHZ(clk));
+	delay #(26'd499,26) delay_half_s (		.delay(tick_0_1s), 
+											.reset_n(rst_n), 
+											.CLOCK_50MHZ(clk), 
+											.en(1));
 	wire tick;
 	assign tick = (sw_speed) ? tick_0_1s : tick_1s;
+
+	// button clock
+	reg tick_change;
+	delay #(26'd12_499_999,26) delay_change (	.delay(tick_change), 
+												.reset_n(rst_n), 
+												.CLOCK_50MHZ(clk), 
+												.en(~butt_change));
+	reg tick_up;
+	delay #(26'd12_499_999,26) delay_tickup (	.delay(tick_up), 
+												.reset_n(rst_n), 
+												.CLOCK_50MHZ(clk), 
+												.en(~butt_increase));
+	reg tick_down;
+	delay #(26'd12_499_999,26) delay_tickdn (	.delay(tick_down), 
+												.reset_n(rst_n), 
+												.CLOCK_50MHZ(clk), 
+												.en(~butt_decrease));
+
 
 	/*************  SINGLE DIGITS  ****************/
 	reg [3:0] sec1; 
@@ -108,11 +135,11 @@ module decade_counter(
 	reg leapYear;
 	assign leapYear = ( 
 						(
-							((year1[0] == 1'b0) && ((year0 == 4'b0000) || 	// year1 even
-													(year0 == 4'b0100) ||		// so y0 is 0, 4, 8
-													(year0 == 4'b1000))) ||
-							((year1[0] == 1'b1) && (	(year0 == 4'b0010) || 	// year1 odd
-													(year0 == 4'b0110)))			// so y0 is 2, 6
+							((year1[0] == 1'b0) && ((year0 == 4'b0000) 	|| 	// year1 even
+													(year0 == 4'b0100) 	||		// so y0 is 0, 4, 8
+													(year0 == 4'b1000)))||
+							((year1[0] == 1'b1) && ((year0 == 4'b0010) 	|| 	// year1 odd
+													(year0 == 4'b0110)))		// so y0 is 2, 6
 						) && 
 						((year1 != 4'b0000) && (year0 != 4'b0000)));	// not divide_able to 100
 	always @(posedge clk or negedge rst_n)
@@ -127,10 +154,10 @@ module decade_counter(
 			sec1 	<= 4'b0000; // 0
 			sec0 	<= 4'b0000;	// 0
 			// 01:01:2024
-			day1 	<= 4'b0010;	// 0
-			day0 	<= 4'b1000;	// 1
+			day1 	<= 4'b0000;	// 0
+			day0 	<= 4'b0001;	// 1
 			month1 	<= 4'b0000;	// 0
-			month0 	<= 4'b0010;	// 1
+			month0 	<= 4'b0001;	// 1
 			year3 	<= 4'b0010;	// 2
 			year2 	<= 4'b0000;	// 0
 			year1 	<= 4'b0010;	// 2
@@ -142,7 +169,7 @@ module decade_counter(
 			if (tick)
 			begin
 				// Check TIME'S double digits value first!
-				if ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
+				if ((hour1 == 4'd2) && 	(hour0 == 4'd3) &&
 					(min1 == 4'd5) 	&& 	(min0 == 4'd9)	&&
 					(sec1 == 4'd5) 	&& 	(sec0 == 4'd9)) 
 				begin
@@ -166,7 +193,7 @@ module decade_counter(
 					sec0 	<= 4'd0;
 				end
 				else if ((min1 == 4'd5) && (min0 == 4'd9) && 
-						 (sec1 == 4'd5) && (sec0 == 4'd9)	&&
+						 (sec1 == 4'd5) && (sec0 == 4'd9) &&
 						 (hour0 == 4'd9))
 				begin
 				 	// Increasement of hour1
@@ -377,17 +404,18 @@ endmodule : bin_to_7seg
 *****************************************************************************************/
 module delay #(parameter COUNT  = 26'd49_999_999,
 			   parameter COUNTW = 26)
-			(delay, reset_n,CLOCK_50MHZ);
+		(delay, reset_n, CLOCK_50MHZ, en);
 
 	output reg delay;
 	input CLOCK_50MHZ;
-	input reset_n;
+	input reset_n;	// reset_n active low
+	input en; 		// enable clock signal active low
 	
 	reg [COUNTW - 1 : 0] count;
 	
 	always @(posedge CLOCK_50MHZ or negedge reset_n)
 	begin
-		if(~reset_n)
+		if(~reset_n || ~en)
 		begin
 			count <= 0;
 		end
