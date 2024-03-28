@@ -1,6 +1,7 @@
 module decade_counter(
 	input 	rst_n,
 	input 	sw_mode,
+	input	sw_speed,
 	input 	clk,
 	input 	butt_increase,
 	input 	butt_decrease,
@@ -17,7 +18,10 @@ module decade_counter(
 	/*************  CLOCK CONTROL  ****************/
 	reg tick_1s;
 	delay #(26'd49_999_999,26) delay1s (.delay(tick_1s), .reset_n(rst_n), .CLOCK_50MHZ(clk));
-	
+	reg tick_0_1s;
+	delay #(26'd499,26) delay_half_s (.delay(tick_0_1s), .reset_n(rst_n), .CLOCK_50MHZ(clk));
+	wire tick;
+	assign tick = (sw_speed) ? tick_0_1s : tick_1s;
 
 	/*************  SINGLE DIGITS  ****************/
 	reg [3:0] sec1; 
@@ -100,17 +104,17 @@ module decade_counter(
 	assign dayChange = ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
 						(min1 == 4'd5) 	&& 	(min0 == 4'd9)	&&
 						(sec1 == 4'd5) 	&& 	(sec0 == 4'd9)	&&
-						(tick_1s));
+						(tick));
 	reg leapYear;
 	assign leapYear = ( 
 						(
-							((year1 == 4'b???0) && (	(year0 == 4'b0000) || 	// year1 even
+							((year1[0] == 1'b0) && ((year0 == 4'b0000) || 	// year1 even
 													(year0 == 4'b0100) ||		// so y0 is 0, 4, 8
 													(year0 == 4'b1000))) ||
-							((year1 == 4'b???1) && (	(year0 == 4'b0010) || 	// year1 odd
+							((year1[0] == 1'b1) && (	(year0 == 4'b0010) || 	// year1 odd
 													(year0 == 4'b0110)))			// so y0 is 2, 6
 						) && 
-						~({year1, year0} == 8'b00000000)) ? 1'b1 : 1'b0;	// not divide_able to 100
+						((year1 != 4'b0000) && (year0 != 4'b0000)));	// not divide_able to 100
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
@@ -123,10 +127,10 @@ module decade_counter(
 			sec1 	<= 4'b0000; // 0
 			sec0 	<= 4'b0000;	// 0
 			// 01:01:2024
-			day1 	<= 4'b0000;	// 0
-			day0 	<= 4'b0001;	// 1
+			day1 	<= 4'b0010;	// 0
+			day0 	<= 4'b1000;	// 1
 			month1 	<= 4'b0000;	// 0
-			month0 	<= 4'b0001;	// 1
+			month0 	<= 4'b0010;	// 1
 			year3 	<= 4'b0010;	// 2
 			year2 	<= 4'b0000;	// 0
 			year1 	<= 4'b0010;	// 2
@@ -135,7 +139,7 @@ module decade_counter(
 		else
 		begin
 			// TIME BLOCK
-			if (tick_1s)
+			if (tick)
 			begin
 				// Check TIME'S double digits value first!
 				if ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
@@ -195,7 +199,7 @@ module decade_counter(
 					sec1 	<= 4'd0;
 					sec0 	<= 4'd0;
 				end
-				else if ((sec1 == 4'b1001) && (sec0 == 4'b1001)) 
+				else if ((sec1 =='b0101) && (sec0 == 4'b1001)) 
 				begin
 					// Increasement of min0
 					min0 	<= min0 + 4'd1;
@@ -218,9 +222,9 @@ module decade_counter(
 			end
 
 			// DATE BLOCK
-			if ( (dayChange == 1'b1) && ({year2, year1, year0} == 12'b1001_1001_1001) // ~999
-									&& ({month1, month0} 	== 8'b0001_0010)			// December
-									&& ({day1, day0} 	== 8'b0011_0001))		// 31st
+			if ( (dayChange == 1'b1) && ({year2, year1, year0} 	== 12'b1001_1001_1001) 	// ~999
+									 && ({month1, month0} 		== 8'b0001_0010)		// December
+									 && ({day1, day0} 			== 8'b0011_0001))		// 31st
 			begin
 				// Increasemetn of year3
 				if (year3 == 4'd9)	// Incase 9999 appear
@@ -325,7 +329,7 @@ module decade_counter(
 					day1 	<= 4'd0;
 					day0 	<= 4'd1;  
 				end
-				else if ({day1, day0} == 8'b00101000) // 28th
+				else if ((!leapYear) &&{day1, day0} == 8'b00101000) // 28th
 				begin 
 					month0 <= month0 + 4'd1;
 					
