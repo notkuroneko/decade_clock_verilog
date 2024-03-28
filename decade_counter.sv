@@ -40,13 +40,15 @@ module decade_counter(
 	reg [3:0] year1;
 	reg [3:0] year0;
 
+
+	/*************  DISPLAY TO 7SEG  ***************/
 	logic [7:0][6:0] calendar_dis;
 	logic [7:0][6:0] clock_dis;
 
 	logic [7:0][3:0] calendar_bin;
 	logic [7:0][3:0] clock_bin;
 	assign calendar_bin = {day1, day0, month1, month0, year3, year2, year1, year0};
-	assign clock_bin 	= {hour1, hour0, min1, min0, sec1, sec0, 7'b1111111, 7'b1111111};
+	assign clock_bin 	= {hour1, hour0, min1, min0, sec1, sec0, 4'b1110, 4'b1110};
 	
 	bin_to_7seg day1_dis 	(.w_bcd(calendar_bin[7]), .w_seg7(calendar_dis[7]));
 	bin_to_7seg day0_dis 	(.w_bcd(calendar_bin[6]), .w_seg7(calendar_dis[6]));
@@ -66,25 +68,54 @@ module decade_counter(
 	bin_to_7seg blk1_dis 	(.w_bcd(clock_bin[1]), .w_seg7(clock_dis[1]));
 	bin_to_7seg blk0_dis 	(.w_bcd(clock_bin[0]), .w_seg7(clock_dis[0]));
 
+	always @(posedge clk or negedge rst_n)
+	begin
+		if (sw_mode) 
+		begin
+			seg7 = calendar_dis[7];
+			seg6 = calendar_dis[6];
+			seg5 = calendar_dis[5];
+			seg4 = calendar_dis[4];
+			seg3 = calendar_dis[3];
+			seg2 = calendar_dis[2];
+			seg1 = calendar_dis[1];
+			seg0 = calendar_dis[0];
+		end
+		else 
+		begin
+			seg7 = clock_dis[7];
+			seg6 = clock_dis[6];
+			seg5 = clock_dis[5];
+			seg4 = clock_dis[4];
+			seg3 = clock_dis[3];
+			seg2 = clock_dis[2];
+			seg1 = clock_dis[1];
+			seg0 = clock_dis[0];
+		end
+	end
 
+
+	/**************  CLOCK'S LOGIC  ****************/
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
 			begin
-				sec1 <= 0; 
-				sec0 <= 0;
-				min1 <= 0;
-				min0 <= 0;
-				hour1 <= 0;
-				hour0 <= 0;
-				day1 <= 0;
-				day0 <= 4'd1;
-				month1 <= 0;
-				month0 <= 4'd1;
-				year3 <= 4'd2;
-				year2 <= 0;
-				year1 <= 4'd2;
-				year0 <= 4'd4;
+				hour1 	<= 4'b0000;	// 0
+				hour0 	<= 4'b0000;	// 0
+				min1 	<= 4'b0000;	// 0
+				min0 	<= 4'b0000;	// 0
+				sec1 	<= 4'b0000; // 0
+				sec0 	<= 4'b0000;	// 0
+				
+
+				day1 	<= 4'b0000;	// 0
+				day0 	<= 4'b0001;	// 1
+				month1 	<= 4'b0000;	// 0
+				month0 	<= 4'b0001;	// 1
+				year3 	<= 4'b0010;	// 2
+				year2 	<= 4'b0000;	// 0
+				year1 	<= 4'b0010;	// 2
+				year0 	<= 4'b0100;	// 4
 			end
 		else
 		begin
