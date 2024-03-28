@@ -225,7 +225,22 @@ module decade_counter(
 										 && ({day1, day0} 		& 8'b0011_0001))	// 31st
 			begin
 				// Increasemetn of year2
-				year0 	<= year0 + 4'd1;
+				year2 	<= year2 + 4'd1;
+				year1 	<= 4'd0;
+				year0 	<= 4'd0;
+				
+				day1	<= 4'd00;
+				day0 	<= 4'd01;
+				month1	<= 4'd00;
+				month0	<= 4'd01;
+			end
+			else if ( (dayChange & 1'b1) && ({year0} 			& 4'b1001) 			// ~~~9
+										 && ({month1, month0} 	& 8'b0001_0010)		// December
+										 && ({day1, day0} 		& 8'b0011_0001))	// 31st
+			begin
+				// Increasemetn of year1
+				year1 	<= year1 + 4'd1;
+				year0 	<= 4'd0;
 				
 				day1	<= 4'd00;
 				day0 	<= 4'd01;
