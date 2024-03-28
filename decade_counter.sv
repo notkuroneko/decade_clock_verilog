@@ -247,8 +247,8 @@ module decade_counter(
 				month1	<= 4'd00;
 				month0	<= 4'd01;
 			end
-			else if ( (dayChange & 1'b1) && ({month1, month0} 	& 8'd18)	// December
-										 && ({day1, day0} 		& 8'd49))	// 31st
+			else if ( (dayChange & 1'b1) && ({month1, month0} 	& 8'b00010010)		// December
+										 && ({day1, day0} 		& 8'd49))			// 31st
 			begin
 				// Increasemetn of year0
 				year0 	<= year0 + 4'd1;
@@ -258,26 +258,45 @@ module decade_counter(
 				month1	<= 4'd00;
 				month0	<= 4'd01;
 			end
-			else if ((dayChange == 1) && (	month_bin == 4'd1 || month_bin == 4'd3 || 
-											month_bin == 4'd5 || month_bin == 4'd7 ||
-										 	month_bin == 4'd8 || month_bin == 4'd10 ))
+			// Month that have 31 days
+			else if ((dayChange & 1'b1) && (({month1, month0} 	& 8'b00000001) ||	// Jan
+											({month1, month0} 	& 8'b00000011) ||	// Mar
+											({month1, month0} 	& 8'b00000101) ||	// May
+											({month1, month0} 	& 8'b00000111) ||	// Jul
+											({month1, month0} 	& 8'b00001000) ||	// Aug
+											({month1, month0} 	& 8'b00010000) ))	// Oct
 			begin
-				if (day_bin == 5'd31) 
+				if (({day1, day0} 	& 8'b00110001))	// 31 
 				begin 
-					day_bin 	<= 5'd1; 
-					month_bin 	<= month_bin + 1;
+					// month1 is not need to change here
+					month0 	<= month0 + 4'd1;
+
+					day1 	<= 4'd0;
+					day0 	<= 4'd1; 
 				end
 			end
-			else if ((dayChange == 1) && ( 	month_bin == 4'd4 || month_bin == 4'd6 || 
-											month_bin == 4'd9 || month_bin == 4'd11 ))
+			else if ((dayChange & 1'b1) && (({month1, month0} 	& 8'b00000100) ||	// Apr
+											({month1, month0} 	& 8'b00000110) ||	// Jun
+											({month1, month0} 	& 8'b00001001) ||	// Sep
+											({month1, month0} 	& 8'b00010001) ))	// Nov
 			begin
 				if (day_bin == 5'd30) 
 				begin
-					day_bin 	<= 5'd1;  
-					month_bin 	<= month_bin + 1;
+					if (month0 & 4'b1001)	// Sep require process of month1
+					begin
+						month1 <= 4'd1;		// Resault: Oct
+						month0 <= 4'd0;
+					end
+					else
+					begin
+						month0 <= month0 + 4'd1;
+					end
+					
+					day1 	<= 4'd0;
+					day0 	<= 4'd1;  
 				end
 			end
-			else if ((dayChange == 1) && (month_bin == 4'd2))		// FEB
+			else if ((dayChange & 1'b1) && 	({month1, month0} 	& 8'b00000010))		// Feb
 			begin
 				if ((year_bin % 14'd4 == 0) && (year_bin % 14'd100 != 0) && (day_bin == 5'd29)) 
 				begin 
