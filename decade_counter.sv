@@ -97,20 +97,20 @@ module decade_counter(
 
 	/**************  DIGITAL CLOCK'S LOGIC  ****************/
 	reg dayChange;
-	assign dayChange = ((hour1 & 4'd2) 	&& 	(hour0 & 4'd3) 	&&
-						(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
-						(sec1 & 4'd5) 	&& 	(sec0 & 4'd9)	&&
+	assign dayChange = ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
+						(min1 == 4'd5) 	&& 	(min0 == 4'd9)	&&
+						(sec1 == 4'd5) 	&& 	(sec0 == 4'd9)	&&
 						(tick_1s));
 	reg leapYear;
 	assign leapYear = ( 
 						(
-							((year1 & 4'b???0) && (	(year0 & 4'b0000) || 	// year1 even
-													(year0 & 4'b0100) ||		// so y0 is 0, 4, 8
-													(year0 & 4'b1000))) ||
-							((year1 & 4'b???1) && (	(year0 & 4'b0010) || 	// year1 odd
-													(year0 & 4'b0110)))			// so y0 is 2, 6
+							((year1 == 4'b???0) && (	(year0 == 4'b0000) || 	// year1 even
+													(year0 == 4'b0100) ||		// so y0 is 0, 4, 8
+													(year0 == 4'b1000))) ||
+							((year1 == 4'b???1) && (	(year0 == 4'b0010) || 	// year1 odd
+													(year0 == 4'b0110)))			// so y0 is 2, 6
 						) && 
-						~({year1, year0} & 8'b00000000)) ? 1'b1 : 1'b0;	// not divide_able to 100
+						~({year1, year0} == 8'b00000000)) ? 1'b1 : 1'b0;	// not divide_able to 100
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
@@ -138,11 +138,11 @@ module decade_counter(
 			if (tick_1s)
 			begin
 				// Check TIME'S double digits value first!
-				if ((hour1 & 4'd2) 	&& 	(hour0 & 4'd3) 	&&
-					(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
-					(sec1 & 4'd5) 	&& 	(sec0 & 4'd9)) 
+				if ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
+					(min1 == 4'd5) 	&& 	(min0 == 4'd9)	&&
+					(sec1 == 4'd5) 	&& 	(sec0 == 4'd9)) 
 				begin
-					if (day0 & 4'd1001)
+					if (day0 == 4'd1001)
 					begin
 						// Increasement of day1
 						day1 <= day1 + 4'd1;
@@ -161,9 +161,9 @@ module decade_counter(
 					sec1 	<= 4'd0;
 					sec0 	<= 4'd0;
 				end
-				else if ((min1 & 4'd5) && (min0 & 4'd9) && 
-						 (sec1 & 4'd5) && (sec0 & 4'd9)	&&
-						 (hour0 & 4'd9))
+				else if ((min1 == 4'd5) && (min0 == 4'd9) && 
+						 (sec1 == 4'd5) && (sec0 == 4'd9)	&&
+						 (hour0 == 4'd9))
 				begin
 				 	// Increasement of hour1
 					hour1 	<= hour1 + 4'd1;
@@ -174,8 +174,8 @@ module decade_counter(
 					sec1 	<= 4'd0;
 					sec0 	<= 4'd0;
 				end 
-				else if ((min1 & 4'd5) && (min0 & 4'd9) && 
-						 (sec1 & 4'd5) && (sec0 & 4'd9)) 
+				else if ((min1 == 4'd5) && (min0 == 4'd9) && 
+						 (sec1 == 4'd5) && (sec0 == 4'd9)) 
 				begin
 					// Increasement of hour0
 					hour0 	<= hour0 + 4'd1;
@@ -185,8 +185,8 @@ module decade_counter(
 					sec1 	<= 4'd0;
 					sec0 	<= 4'd0;
 				end
-				else if ((sec1 & 4'd5) && (sec0 & 4'd9) && 
-						 (min0 & 4'd9)) 
+				else if ((sec1 == 4'd5) && (sec0 == 4'd9) && 
+						 (min0 == 4'd9)) 
 				begin
 					// Increasement of min1
 					min1 	<= min1 + 4'd1;
@@ -195,7 +195,7 @@ module decade_counter(
 					sec1 	<= 4'd0;
 					sec0 	<= 4'd0;
 				end
-				else if ((sec1 & 4'd5) && (sec0 & 4'd9)) 
+				else if ((sec1 == 4'b1001) && (sec0 == 4'b1001)) 
 				begin
 					// Increasement of min0
 					min0 	<= min0 + 4'd1;
@@ -203,7 +203,7 @@ module decade_counter(
 					sec1 	<= 4'd0;
 					sec0 	<= 4'd0;
 				end
-				else if ((sec0 & 4'd9)) 
+				else if ((sec0 == 4'b1001)) 
 				begin
 					// Increasement of sec1
 					sec1 	<= sec1 + 4'd1;
@@ -213,17 +213,17 @@ module decade_counter(
 				else 
 				begin
 					// Increasement of sec0
-					sec0 	<= sec0 + 6'd1;
+					sec0 	<= sec0 + 4'd1;
 				end
 			end
 
 			// DATE BLOCK
-			if ( (dayChange & 1'b1) && ({year2, year1, year0} & 12'b1001_1001_1001) // ~999
-									&& ({month1, month0} 	& 8'b0001_0010)			// December
-									&& ({day1, day0} 		& 8'b0011_0001))		// 31st
+			if ( (dayChange == 1'b1) && ({year2, year1, year0} == 12'b1001_1001_1001) // ~999
+									&& ({month1, month0} 	== 8'b0001_0010)			// December
+									&& ({day1, day0} 	== 8'b0011_0001))		// 31st
 			begin
 				// Increasemetn of year3
-				if (year3 & 4'd9)	// Incase 9999 appear
+				if (year3 == 4'd9)	// Incase 9999 appear
 				begin
 					year3 <= 0;
 				end
@@ -240,9 +240,9 @@ module decade_counter(
 				month1	<= 4'd00;
 				month0	<= 4'd01;
 			end
-			else if ( (dayChange & 1'b1) && ({year1, year0} 	& 8'b1001_1001) 	// ~~99
-										 && ({month1, month0} 	& 8'b0001_0010)		// December
-										 && ({day1, day0} 		& 8'b0011_0001))	// 31st
+			else if ( (dayChange == 1'b1) && ({year1, year0} 	== 8'b1001_1001) 	// ~~99
+										 && ({month1, month0} 	== 8'b0001_0010)		// December
+										 && ({day1, day0} 		== 8'b0011_0001))	// 31st
 			begin
 				// Increasemetn of year2
 				year2 	<= year2 + 4'd1;
@@ -254,9 +254,9 @@ module decade_counter(
 				month1	<= 4'd00;
 				month0	<= 4'd01;
 			end
-			else if ( (dayChange & 1'b1) && ({year0} 			& 4'b1001) 			// ~~~9
-										 && ({month1, month0} 	& 8'b0001_0010)		// December
-										 && ({day1, day0} 		& 8'b0011_0001))	// 31st
+			else if ( (dayChange == 1'b1) && ({year0} 			== 4'b1001) 			// ~~~9
+										 && ({month1, month0} 	== 8'b0001_0010)		// December
+										 && ({day1, day0} 		== 8'b0011_0001))	// 31st
 			begin
 				// Increasemetn of year1
 				year1 	<= year1 + 4'd1;
@@ -267,8 +267,8 @@ module decade_counter(
 				month1	<= 4'd00;
 				month0	<= 4'd01;
 			end
-			else if ( (dayChange & 1'b1) && ({month1, month0} 	& 8'b00010010)		// December
-										 && ({day1, day0} 		& 8'd49))			// 31st
+			else if ( (dayChange == 1'b1) && ({month1, month0} 	== 8'b00010010)		// December
+										 && ({day1, day0} 		== 8'd49))			// 31st
 			begin
 				// Increasemetn of year0
 				year0 	<= year0 + 4'd1;
@@ -279,14 +279,14 @@ module decade_counter(
 				month0	<= 4'd01;
 			end
 			// Month that have 31 days
-			else if ((dayChange & 1'b1) && (({month1, month0} 	& 8'b00000001) ||	// Jan
-											({month1, month0} 	& 8'b00000011) ||	// Mar
-											({month1, month0} 	& 8'b00000101) ||	// May
-											({month1, month0} 	& 8'b00000111) ||	// Jul
-											({month1, month0} 	& 8'b00001000) ||	// Aug
-											({month1, month0} 	& 8'b00010000) ))	// Oct
+			else if ((dayChange == 1'b1) && (({month1, month0} 	== 8'b00000001) ||	// Jan
+											({month1, month0} 	== 8'b00000011) ||	// Mar
+											({month1, month0} 	== 8'b00000101) ||	// May
+											({month1, month0} 	== 8'b00000111) ||	// Jul
+											({month1, month0} 	== 8'b00001000) ||	// Aug
+											({month1, month0} 	== 8'b00010000) ))	// Oct
 			begin
-				if (({day1, day0} 	& 8'b00110001))	// 31 
+				if (({day1, day0} 	== 8'b00110001))	// 31 
 				begin 
 					// month1 is not need to change here
 					month0 	<= month0 + 4'd1;
@@ -295,14 +295,14 @@ module decade_counter(
 					day0 	<= 4'd1; 
 				end
 			end
-			else if ((dayChange & 1'b1) && (({month1, month0} 	& 8'b00000100) ||	// Apr
-											({month1, month0} 	& 8'b00000110) ||	// Jun
-											({month1, month0} 	& 8'b00001001) ||	// Sep
-											({month1, month0} 	& 8'b00010001) ))	// Nov
+			else if ((dayChange == 1'b1) && (({month1, month0} 	== 8'b00000100) ||	// Apr
+											({month1, month0} 	== 8'b00000110) ||	// Jun
+											({month1, month0} 	== 8'b00001001) ||	// Sep
+											({month1, month0} 	== 8'b00010001) ))	// Nov
 			begin
-				if (({day1, day0} 	& 8'b00110000))	// 30
+				if (({day1, day0} 	== 8'b00110000))	// 30
 				begin
-					if (month0 & 4'b1001)	// Sep require process of month1
+					if (month0 == 4'b1001)	// Sep require process of month1
 					begin
 						month1 <= 4'd1;		// Resault: Oct
 						month0 <= 4'd0;
@@ -316,7 +316,7 @@ module decade_counter(
 					day0 	<= 4'd1;  
 				end
 			end
-			else if ((dayChange & 1'b1) && 	({month1, month0} 	& 8'b00000010))		// Feb
+			else if ((dayChange == 1'b1) && 	({month1, month0} 	 ==  8'b00000010))		// Feb
 			begin
 				if ((leapYear) && ({day1, day0} == 8'b00101001)) // 29th 
 				begin 
@@ -361,7 +361,7 @@ module bin_to_7seg(
 			4'd7: seg7 <= ~7'b0000111;   
 			4'd8: seg7 <= ~7'b1111111; 
 			4'd9: seg7 <= ~7'b1101111;  
-			default : seg7 <= 7'b0000000;
+			default : seg7 <= ~7'b0000000;
 		endcase
 	end
 
