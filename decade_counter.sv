@@ -1,10 +1,10 @@
 module decade_counter(
-	input rst_n,
-	input sw_mode,
-	input clk,
-	input butt_increase,
-	input butt_decrease,
-	input butt_change,
+	input 	rst_n,
+	input 	sw_mode,
+	input 	clk,
+	input 	butt_increase,
+	input 	butt_decrease,
+	input 	butt_change,
 	output logic [6:0] seg0,
 	output logic [6:0] seg1,
 	output logic [6:0] seg2,
@@ -14,6 +14,11 @@ module decade_counter(
 	output logic [6:0] seg6,
 	output logic [6:0] seg7);
 	
+	/*************  CLOCK CONTROL  ****************/
+	reg tick_1s;
+	delay #(26'd49_999_999,26) delay1s (.delay(tick_1s), .reset_n(rst_n), .CLOCK_50MHZ(clk));
+	
+
 	/*************  SINGLE DIGITS  ****************/
 	reg [3:0] sec1; 
 	reg [3:0] sec0;
@@ -34,40 +39,33 @@ module decade_counter(
 	reg [3:0] year2;
 	reg [3:0] year1;
 	reg [3:0] year0;
+
 	logic [7:0][6:0] calendar_dis;
-	logic [7:2][6:0] clock_dis;
+	logic [7:0][6:0] clock_dis;
+
 	logic [7:0][3:0] calendar_bin;
-	logic [7:2][3:0] clock_bin;
+	logic [7:0][3:0] clock_bin;
+	assign calendar_bin = {day1, day0, month1, month0, year3, year2, year1, year0};
+	assign clock_bin 	= {hour1, hour0, min1, min0, sec1, sec0, 7'b1111111, 7'b1111111};
 	
-	bin_to_7seg day1_dis (.w_bcd(calendar_bin[7]), .w_seg7(calendar_dis[7]));
-	bin_to_7seg day0_dis (.w_bcd(calendar_bin[6]), .w_seg7(calendar_dis[6]));
-	bin_to_7seg month1_dis (.w_bcd(calendar_bin[5]), .w_seg7(calendar_dis[5]));
-	bin_to_7seg month0_dis (.w_bcd(calendar_bin[4]), .w_seg7(calendar_dis[4]));
-	bin_to_7seg year3_dis (.w_bcd(calendar_bin[3]), .w_seg7(calendar_dis[3]));
-	bin_to_7seg year2_dis (.w_bcd(calendar_bin[2]), .w_seg7(calendar_dis[2]));
-	bin_to_7seg year1_dis (.w_bcd(calendar_bin[1]), .w_seg7(calendar_dis[1]));
-	bin_to_7seg year0_dis (.w_bcd(calendar_bin[0]), .w_seg7(calendar_dis[0]));
-	bin_to_7seg sec1_dis (.w_bcd(clock_bin[3]), .w_seg7(clock_dis[3]));
-	bin_to_7seg sec0_dis (.w_bcd(clock_bin[2]), .w_seg7(clock_dis[2]));
-	bin_to_7seg min1_dis (.w_bcd(clock_bin[5]), .w_seg7(clock_dis[5]));
-	bin_to_7seg min0_dis (.w_bcd(clock_bin[4]), .w_seg7(clock_dis[4]));
-	bin_to_7seg hour1_dis (.w_bcd(clock_bin[7]), .w_seg7(clock_dis[7]));
-	bin_to_7seg hour0_dis (.w_bcd(clock_bin[6]), .w_seg7(clock_dis[6]));
+	bin_to_7seg day1_dis 	(.w_bcd(calendar_bin[7]), .w_seg7(calendar_dis[7]));
+	bin_to_7seg day0_dis 	(.w_bcd(calendar_bin[6]), .w_seg7(calendar_dis[6]));
+	bin_to_7seg month1_dis 	(.w_bcd(calendar_bin[5]), .w_seg7(calendar_dis[5]));
+	bin_to_7seg month0_dis 	(.w_bcd(calendar_bin[4]), .w_seg7(calendar_dis[4]));
+	bin_to_7seg year3_dis 	(.w_bcd(calendar_bin[3]), .w_seg7(calendar_dis[3]));
+	bin_to_7seg year2_dis 	(.w_bcd(calendar_bin[2]), .w_seg7(calendar_dis[2]));
+	bin_to_7seg year1_dis 	(.w_bcd(calendar_bin[1]), .w_seg7(calendar_dis[1]));
+	bin_to_7seg year0_dis 	(.w_bcd(calendar_bin[0]), .w_seg7(calendar_dis[0]));
 	
-	assign calendar_bin[7] = day1;
-	assign calendar_bin[6] = day0;
-	assign calendar_bin[5] = month1;
-	assign calendar_bin[4] = month0;
-	assign calendar_bin[3] = year3;
-	assign calendar_bin[2] = year2;
-	assign calendar_bin[1] = year1;
-	assign calendar_bin[0] = year0;
-	assign clock_bin[7] = hour1;
-	assign clock_bin[6] = hour0;
-	assign clock_bin[5] = min1;
-	assign clock_bin[4] = min0;
-	assign clock_bin[3] = sec1;
-	assign clock_bin[2] = sec0;
+	bin_to_7seg hour1_dis 	(.w_bcd(clock_bin[7]), .w_seg7(clock_dis[7]));
+	bin_to_7seg hour0_dis 	(.w_bcd(clock_bin[6]), .w_seg7(clock_dis[6]));
+	bin_to_7seg min1_dis 	(.w_bcd(clock_bin[5]), .w_seg7(clock_dis[5]));
+	bin_to_7seg min0_dis 	(.w_bcd(clock_bin[4]), .w_seg7(clock_dis[4]));
+	bin_to_7seg sec1_dis 	(.w_bcd(clock_bin[3]), .w_seg7(clock_dis[3]));
+	bin_to_7seg sec0_dis 	(.w_bcd(clock_bin[2]), .w_seg7(clock_dis[2]));
+	bin_to_7seg blk1_dis 	(.w_bcd(clock_bin[1]), .w_seg7(clock_dis[1]));
+	bin_to_7seg blk0_dis 	(.w_bcd(clock_bin[0]), .w_seg7(clock_dis[0]));
+
 
 	always @(posedge clk or negedge rst_n)
 	begin
@@ -226,6 +224,10 @@ module decade_counter(
 		end
 	end
 endmodule
+
+
+/*****************************************************************************************
+								7 SEGMENT DECODER
 *****************************************************************************************/
 module bin_to_7seg(	
 	input [3:0] bcd,
@@ -253,7 +255,7 @@ endmodule : bin_to_7seg
 
 
 /*****************************************************************************************
-								DELAY
+									DELAY
 *****************************************************************************************/
 module delay #(parameter COUNT  = 26'd49_999_999,
 			   parameter COUNTW = 26)
