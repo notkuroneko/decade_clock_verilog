@@ -95,7 +95,11 @@ module decade_counter(
 	end
 
 
-	/**************  CLOCK'S LOGIC  ****************/
+	/**************  DIGITAL CLOCK'S LOGIC  ****************/
+	reg dayChange;
+	assign dayChange = ((hour1 & 4'd2) 	&& 	(hour0 & 4'd3) 	&&
+						(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
+						(sec1 & 4'd5) 	&& 	(sec0 & 4'd9));
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
@@ -119,7 +123,7 @@ module decade_counter(
 		end
 		else
 		begin
-
+			// TIME BLOCK
 			if (tick_1s)
 			begin
 				// Check TIME'S double digits value first!
@@ -193,89 +197,85 @@ module decade_counter(
 				end
 			end
 
-			//day increment block
-			if (hour1 == 4'd2 && hour0 == 4'd4)
+			// DATE BLOCK
+			if ( (dayChange & 1'b1) && ({year2, year1, year0} & 12'b1001_1001_1001) // ~999
+									&& ({month1, month0} 	& 8'b0001_0010)			// December
+									&& ({day1, day0} 		& 8'b0011_0001))		// 31st
 			begin
-				hour0 <= 0; hour1 <= 0; day0 <= day0 + 1;
-			end
-			if (day0 == 4'd10)
-			begin
-				day0 <= 0; day1 <= day1 + 1;
-			end
-			//month increment block
-			if (	
-				{month1, month0} == 8'd1 ||
-				{month1, month0} == 8'd3 ||
-				{month1, month0} == 8'd5 ||
-				{month1, month0} == 8'd7 ||
-				{month1, month0} == 8'd8 ||
-				{month1, month0} == 8'd16 || //October
-				{month1, month0} == 8'd18 //December
-			)  
-			begin
-				if (day1 == 4'd3 && day0 == 4'd1)
+				// Increasemetn of year3
+				if (year3 & 4'd9)	// Incase 9999 appear
 				begin
-					day1 <= 0; day0 <= 4'd1; month0 <= month0 + 1;
+					year3 <= 0;
 				end
-			end
-			else 
-				if (	
-					{month1, month0} == 4'd4 ||
-					{month1, month0} == 4'd6 ||
-					{month1, month0} == 4'd9 ||
-					{month1, month0} == 4'd17 //November
-				)
+				else
 				begin
-					if (day1 == 4'd3 && day0 == 0)
-					begin
-						day1 <= 0; day0 <= 4'd1; month0 <= month0 + 1;
-					end
+					year3 	<= year3 + 4'd1;
 				end
-			else 
-				if ({month1, month0} == 8'd2)
+				year2 	<= 4'd0;
+				year1 	<= 4'd0;
+				year0 	<= 4'd0;
+				// 01:01:xxxx
+				day1	<= 4'd00;
+				day0 	<= 4'd01;
+				month1	<= 4'd00;
+				month0	<= 4'd01;
+			end
+			else if ( (dayChange & 1'b1) && ({year1, year0} 	& 8'b1001_1001) 	// ~~99
+										 && ({month1, month0} 	& 8'b0001_0010)		// December
+										 && ({day1, day0} 		& 8'b0011_0001))	// 31st
+			begin
+				// Increasemetn of year2
+				year0 	<= year0 + 4'd1;
+				
+				day1	<= 4'd00;
+				day0 	<= 4'd01;
+				month1	<= 4'd00;
+				month0	<= 4'd01;
+			end
+			else if ( (dayChange & 1'b1) && ({month1, month0} 	& 8'd18)	// December
+										 && ({day1, day0} 		& 8'd49))	// 31st
+			begin
+				// Increasemetn of year0
+				year0 	<= year0 + 4'd1;
+				
+				day1	<= 4'd00;
+				day0 	<= 4'd01;
+				month1	<= 4'd00;
+				month0	<= 4'd01;
+			end
+			else if ((dayChange == 1) && (	month_bin == 4'd1 || month_bin == 4'd3 || 
+											month_bin == 4'd5 || month_bin == 4'd7 ||
+										 	month_bin == 4'd8 || month_bin == 4'd10 ))
+			begin
+				if (day_bin == 5'd31) 
 				begin 
-					if ((year0 % 4 == 0 && year1 % 2 == 0) || (year0 % 4 == 2 && year1 % 2 == 1)) //check for leap year
-					begin
-						if (day1 == 4'd2 && day0 == 4'd9)
-						begin
-							day1 <= 0; day0 <= 4'd1; month0 <= month0 + 1;
-						end
-					end
-					else 
-					begin
-						if (day1 == 4'd2 && day0 == 4'd8)
-						begin
-							day1 <= 0; day0 <= 4'd1; month0 <= month0 + 1;
-						end
-					end
+					day_bin 	<= 5'd1; 
+					month_bin 	<= month_bin + 1;
 				end
-			
-			
-			if (month0 == 4'd10)
-			begin
-				month0 <= 0; month1 <= month1 + 1;
 			end
-			//year incrememnt block here
-			if (month1 == 4'd1 && month0 == 4'd3)
+			else if ((dayChange == 1) && ( 	month_bin == 4'd4 || month_bin == 4'd6 || 
+											month_bin == 4'd9 || month_bin == 4'd11 ))
 			begin
-				month1 <= 0; month1 <= 4'd1; year0 <= year0 + 1;
+				if (day_bin == 5'd30) 
+				begin
+					day_bin 	<= 5'd1;  
+					month_bin 	<= month_bin + 1;
+				end
 			end
-			if (year0 == 4'd10)
+			else if ((dayChange == 1) && (month_bin == 4'd2))		// FEB
 			begin
-				year0 <= 0; year1 <= year1 + 1;
+				if ((year_bin % 14'd4 == 0) && (year_bin % 14'd100 != 0) && (day_bin == 5'd29)) 
+				begin 
+					day_bin 	<= 5'd1;  
+					month_bin 	<= month_bin + 1;
+				end
+				else if (day_bin == 5'd28) 
+				begin 
+					day_bin 	<= 5'd1;  
+					month_bin 	<= month_bin + 1;
+				end
 			end
-			if (year1 == 4'd10)
-			begin
-				year1 <= 0; year2 <= year2 + 1;
-			end
-			if (year0 == 4'd10)
-			begin
-				year2 <= 0; year3 <= year3 + 1;
-			end
-			if (year0 == 4'd10)
-			begin
-				year0 <= 0; year1 <= 0; year2 <= 0; year3 <= 0;
-			end
+
 		end
 	end
 
