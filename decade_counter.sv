@@ -99,50 +99,100 @@ module decade_counter(
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
-			begin
-				hour1 	<= 4'b0000;	// 0
-				hour0 	<= 4'b0000;	// 0
-				min1 	<= 4'b0000;	// 0
-				min0 	<= 4'b0000;	// 0
-				sec1 	<= 4'b0000; // 0
-				sec0 	<= 4'b0000;	// 0
-				
-
-				day1 	<= 4'b0000;	// 0
-				day0 	<= 4'b0001;	// 1
-				month1 	<= 4'b0000;	// 0
-				month0 	<= 4'b0001;	// 1
-				year3 	<= 4'b0010;	// 2
-				year2 	<= 4'b0000;	// 0
-				year1 	<= 4'b0010;	// 2
-				year0 	<= 4'b0100;	// 4
-			end
+		begin
+			// 00:00:00xx
+			hour1 	<= 4'b0000;	// 0
+			hour0 	<= 4'b0000;	// 0
+			min1 	<= 4'b0000;	// 0
+			min0 	<= 4'b0000;	// 0
+			sec1 	<= 4'b0000; // 0
+			sec0 	<= 4'b0000;	// 0
+			// 01:01:2024
+			day1 	<= 4'b0000;	// 0
+			day0 	<= 4'b0001;	// 1
+			month1 	<= 4'b0000;	// 0
+			month0 	<= 4'b0001;	// 1
+			year3 	<= 4'b0010;	// 2
+			year2 	<= 4'b0000;	// 0
+			year1 	<= 4'b0010;	// 2
+			year0 	<= 4'b0100;	// 4
+		end
 		else
 		begin
-			//second increment block
-			sec0 <= sec0 + 1;
-			if (sec0 == 4'd10)
+
+			if (tick_1s)
 			begin
-				sec0 <= 0; sec1 <= sec1 + 1;
+				// Check TIME'S double digits value first!
+				if ((hour1 & 4'd2) 	&& 	(hour0 & 4'd3) 	&&
+					(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
+					(sec1 & 4'd5) 	&& 	(sec0 & 4'd9)) 
+				begin
+					// Increasement of day0
+					day0 	<= day0 + 4'd1;
+					
+					hour1 	<= 4'd0;
+					hour0 	<= 4'd0;
+					min1 	<= 4'd0;
+					min0 	<= 4'd0;
+					sec1 	<= 4'd0;
+					sec0 	<= 4'd0;
+				end
+				else if ((min1 & 4'd5) && (min0 & 4'd9) && 
+						 (sec1 & 4'd5) && (sec0 & 4'd9)	&&
+						 (hour0 & 4'd9))
+				begin
+				 	// Increasement of hour1
+					hour1 	<= hour1 + 4'd1;
+					hour0 	<= 4'd0;
+
+					min1 	<= 4'd0;
+					min0 	<= 4'd0;
+					sec1 	<= 4'd0;
+					sec0 	<= 4'd0;
+				end 
+				else if ((min1 & 4'd5) && (min0 & 4'd9) && 
+						 (sec1 & 4'd5) && (sec0 & 4'd9)) 
+				begin
+					// Increasement of hour0
+					hour0 	<= hour0 + 4'd1;
+
+					min1 	<= 4'd0;
+					min0 	<= 4'd0;
+					sec1 	<= 4'd0;
+					sec0 	<= 4'd0;
+				end
+				else if ((sec1 & 4'd5) && (sec0 & 4'd9) && 
+						 (min0 & 4'd9)) 
+				begin
+					// Increasement of min1
+					min1 	<= min1 + 4'd1;
+					min0 	<= 4'd0;
+
+					sec1 	<= 4'd0;
+					sec0 	<= 4'd0;
+				end
+				else if ((sec1 & 4'd5) && (sec0 & 4'd9)) 
+				begin
+					// Increasement of min0
+					min0 	<= min0 + 4'd1;
+
+					sec1 	<= 4'd0;
+					sec0 	<= 4'd0;
+				end
+				else if ((sec0 & 4'd9)) 
+				begin
+					// Increasement of sec1
+					sec1 	<= sec1 + 4'd1;
+
+					sec0 	<= 4'd0;
+				end
+				else 
+				begin
+					// Increasement of sec0
+					sec0 	<= sec0 + 6'd1;
+				end
 			end
-			//minute increment block
-			if (sec1 == 4'd6)
-			begin
-				sec1 <= 0; sec0 <= 0; min0 <= min0 + 1;
-			end
-			if (min0 == 4'd10)
-			begin
-				min0 <= 0; min1 <= min1 + 1;
-			end
-			//hour increment block
-			if (min1 == 4'd6)
-			begin
-				min1 <= 0; min0 <= 0; hour0 <= hour0 + 1;
-			end
-			if (hour0 == 4'd10)
-			begin
-				hour0 <= 0; hour1 <= hour1 + 1;
-			end
+
 			//day increment block
 			if (hour1 == 4'd2 && hour0 == 4'd4)
 			begin
@@ -228,32 +278,7 @@ module decade_counter(
 			end
 		end
 	end
-	
-	always @(mode)
-	begin
-		if (mode==0) //calendar display
-		begin
-			seg7_7 = calendar_dis[7];
-			seg7_6 = calendar_dis[6];
-			seg7_5 = calendar_dis[5];
-			seg7_4 = calendar_dis[4];
-			seg7_3 = calendar_dis[3];
-			seg7_2 = calendar_dis[2];
-			seg7_1 = calendar_dis[1];
-			seg7_0 = calendar_dis[0];
-		end
-		else //clock display
-		begin
-			seg7_7 = clock_dis[7];
-			seg7_6 = clock_dis[6];
-			seg7_5 = clock_dis[5];
-			seg7_4 = clock_dis[4];
-			seg7_3 = clock_dis[3];
-			seg7_2 = clock_dis[2];
-			seg7_1 = 0;
-			seg7_0 = 0;
-		end
-	end
+
 endmodule
 
 
