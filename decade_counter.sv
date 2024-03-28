@@ -6,6 +6,8 @@ module decade_counter(
 	input 	butt_increase,		// butt = button (p33 user_man)
 	input 	butt_decrease,		// butt press = 0, release = 1
 	input 	butt_change,
+	output reg	led0,			// led0 and led1 to show the state
+	output reg	led1,
 	output logic [6:0] seg0,
 	output logic [6:0] seg1,
 	output logic [6:0] seg2,
@@ -34,7 +36,7 @@ module decade_counter(
 
 	// button clock
 	reg tick_change;
-	delay #(26'd12_499_999,26) delay_change (	.delay(tick_change), 
+	delay #(26'd24_999_999,26) delay_change (	.delay(tick_change), 
 												.reset_n(rst_n), 
 												.CLOCK_50MHZ(clk), 
 												.en(~butt_change));
@@ -126,6 +128,40 @@ module decade_counter(
 	end
 
 
+	/**********************  BUTTon  ***********************/
+	reg [1:0] state;
+	if (tick_change)
+	begin
+		state <= (state == 2'b11) ? 2'b00 : (state + 2'b01);
+		// if (state == 2'b11)
+		// begin
+		// 	state <= 2'b00;
+		// end
+		// else
+		// begin
+		// 	state <= state + 2'b01;
+		// end
+	end
+	case (state)
+		2'b01 	:
+			begin
+				if(sw_mode)
+				begin
+					
+				end
+				else
+				begin
+
+				endc
+			end
+		2'b10 	:
+		2'b11 	:
+		default : /* default */;
+	endcase
+
+
+
+
 	/**************  DIGITAL CLOCK'S LOGIC  ****************/
 	reg dayChange;
 	assign dayChange = ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
@@ -166,7 +202,7 @@ module decade_counter(
 		else
 		begin
 			// TIME BLOCK
-			if (tick)
+			if (tick && (state == 2'b00))
 			begin
 				// Check TIME'S double digits value first!
 				if ((hour1 == 4'd2) && 	(hour0 == 4'd3) &&
