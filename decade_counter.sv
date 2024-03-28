@@ -100,6 +100,16 @@ module decade_counter(
 	assign dayChange = ((hour1 & 4'd2) 	&& 	(hour0 & 4'd3) 	&&
 						(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
 						(sec1 & 4'd5) 	&& 	(sec0 & 4'd9));
+	reg leapYear;
+	assign leapYear = ( 
+						(
+							((year1 & 4'b???0) && (	(year0 & 4'b0000) || 	// year1 even
+													(year0 & 4'b0100) ||		// so y0 is 0, 4, 8
+													(year0 & 4'b1000))) ||
+							((year1 & 4'b???1) && (	(year0 & 4'b0010) || 	// year1 odd
+													(year0 & 4'b0110)))			// so y0 is 2, 6
+						) && 
+						~({year1, year0} & 8'b00000000)) ? 1'b1 : 1'b0;	// not divide_able to 100
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
@@ -291,7 +301,7 @@ module decade_counter(
 					begin
 						month0 <= month0 + 4'd1;
 					end
-					
+
 					day1 	<= 4'd0;
 					day0 	<= 4'd1;  
 				end
