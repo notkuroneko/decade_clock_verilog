@@ -50,38 +50,27 @@ module decade_counter(
 	assign calendar_bin = {day1, day0, month1, month0, year3, year2, year1, year0};
 	assign clock_bin 	= {hour1, hour0, min1, min0, sec1, sec0, 4'b1110, 4'b1110};
 	
-	bin_to_7seg day1_dis 	(.w_bcd(calendar_bin[7]), .w_seg7(calendar_dis[7]));
-	bin_to_7seg day0_dis 	(.w_bcd(calendar_bin[6]), .w_seg7(calendar_dis[6]));
-	bin_to_7seg month1_dis 	(.w_bcd(calendar_bin[5]), .w_seg7(calendar_dis[5]));
-	bin_to_7seg month0_dis 	(.w_bcd(calendar_bin[4]), .w_seg7(calendar_dis[4]));
-	bin_to_7seg year3_dis 	(.w_bcd(calendar_bin[3]), .w_seg7(calendar_dis[3]));
-	bin_to_7seg year2_dis 	(.w_bcd(calendar_bin[2]), .w_seg7(calendar_dis[2]));
-	bin_to_7seg year1_dis 	(.w_bcd(calendar_bin[1]), .w_seg7(calendar_dis[1]));
-	bin_to_7seg year0_dis 	(.w_bcd(calendar_bin[0]), .w_seg7(calendar_dis[0]));
+	bin_to_7seg day1_dis 	(.bcd(calendar_bin[7]), .seg7(calendar_dis[7]));
+	bin_to_7seg day0_dis 	(.bcd(calendar_bin[6]), .seg7(calendar_dis[6]));
+	bin_to_7seg month1_dis 	(.bcd(calendar_bin[5]), .seg7(calendar_dis[5]));
+	bin_to_7seg month0_dis 	(.bcd(calendar_bin[4]), .seg7(calendar_dis[4]));
+	bin_to_7seg year3_dis 	(.bcd(calendar_bin[3]), .seg7(calendar_dis[3]));
+	bin_to_7seg year2_dis 	(.bcd(calendar_bin[2]), .seg7(calendar_dis[2]));
+	bin_to_7seg year1_dis 	(.bcd(calendar_bin[1]), .seg7(calendar_dis[1]));
+	bin_to_7seg year0_dis 	(.bcd(calendar_bin[0]), .seg7(calendar_dis[0]));
 	
-	bin_to_7seg hour1_dis 	(.w_bcd(clock_bin[7]), .w_seg7(clock_dis[7]));
-	bin_to_7seg hour0_dis 	(.w_bcd(clock_bin[6]), .w_seg7(clock_dis[6]));
-	bin_to_7seg min1_dis 	(.w_bcd(clock_bin[5]), .w_seg7(clock_dis[5]));
-	bin_to_7seg min0_dis 	(.w_bcd(clock_bin[4]), .w_seg7(clock_dis[4]));
-	bin_to_7seg sec1_dis 	(.w_bcd(clock_bin[3]), .w_seg7(clock_dis[3]));
-	bin_to_7seg sec0_dis 	(.w_bcd(clock_bin[2]), .w_seg7(clock_dis[2]));
-	bin_to_7seg blk1_dis 	(.w_bcd(clock_bin[1]), .w_seg7(clock_dis[1]));
-	bin_to_7seg blk0_dis 	(.w_bcd(clock_bin[0]), .w_seg7(clock_dis[0]));
+	bin_to_7seg hour1_dis 	(.bcd(clock_bin[7]), .seg7(clock_dis[7]));
+	bin_to_7seg hour0_dis 	(.bcd(clock_bin[6]), .seg7(clock_dis[6]));
+	bin_to_7seg min1_dis 	(.bcd(clock_bin[5]), .seg7(clock_dis[5]));
+	bin_to_7seg min0_dis 	(.bcd(clock_bin[4]), .seg7(clock_dis[4]));
+	bin_to_7seg sec1_dis 	(.bcd(clock_bin[3]), .seg7(clock_dis[3]));
+	bin_to_7seg sec0_dis 	(.bcd(clock_bin[2]), .seg7(clock_dis[2]));
+	bin_to_7seg blk1_dis 	(.bcd(clock_bin[1]), .seg7(clock_dis[1]));
+	bin_to_7seg blk0_dis 	(.bcd(clock_bin[0]), .seg7(clock_dis[0]));
 
-	always @(posedge clk or negedge rst_n)
+	always_comb
 	begin
-		if (sw_mode) 
-		begin
-			seg7 = calendar_dis[7];
-			seg6 = calendar_dis[6];
-			seg5 = calendar_dis[5];
-			seg4 = calendar_dis[4];
-			seg3 = calendar_dis[3];
-			seg2 = calendar_dis[2];
-			seg1 = calendar_dis[1];
-			seg0 = calendar_dis[0];
-		end
-		else 
+		if (~sw_mode) 
 		begin
 			seg7 = clock_dis[7];
 			seg6 = clock_dis[6];
@@ -92,6 +81,17 @@ module decade_counter(
 			seg1 = clock_dis[1];
 			seg0 = clock_dis[0];
 		end
+		else 
+		begin
+			seg7 = calendar_dis[7];
+			seg6 = calendar_dis[6];
+			seg5 = calendar_dis[5];
+			seg4 = calendar_dis[4];
+			seg3 = calendar_dis[3];
+			seg2 = calendar_dis[2];
+			seg1 = calendar_dis[1];
+			seg0 = calendar_dis[0];
+		end
 	end
 
 
@@ -99,7 +99,8 @@ module decade_counter(
 	reg dayChange;
 	assign dayChange = ((hour1 & 4'd2) 	&& 	(hour0 & 4'd3) 	&&
 						(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
-						(sec1 & 4'd5) 	&& 	(sec0 & 4'd9));
+						(sec1 & 4'd5) 	&& 	(sec0 & 4'd9)	&&
+						(tick_1s));
 	reg leapYear;
 	assign leapYear = ( 
 						(
@@ -141,8 +142,17 @@ module decade_counter(
 					(min1 & 4'd5) 	&& 	(min0 & 4'd9)	&&
 					(sec1 & 4'd5) 	&& 	(sec0 & 4'd9)) 
 				begin
-					// Increasement of day0
-					day0 	<= day0 + 4'd1;
+					if (day0 & 4'd1001)
+					begin
+						// Increasement of day1
+						day1 <= day1 + 4'd1;
+						day0 <= 4'd0;
+					end
+					else
+					begin
+						// Increasement of day0
+						day0 <= day0 + 4'd1;
+					end
 					
 					hour1 	<= 4'd0;
 					hour0 	<= 4'd0;
@@ -290,7 +300,7 @@ module decade_counter(
 											({month1, month0} 	& 8'b00001001) ||	// Sep
 											({month1, month0} 	& 8'b00010001) ))	// Nov
 			begin
-				if (day_bin == 5'd30) 
+				if (({day1, day0} 	& 8'b00110000))	// 30
 				begin
 					if (month0 & 4'b1001)	// Sep require process of month1
 					begin
@@ -308,15 +318,19 @@ module decade_counter(
 			end
 			else if ((dayChange & 1'b1) && 	({month1, month0} 	& 8'b00000010))		// Feb
 			begin
-				if ((year_bin % 14'd4 == 0) && (year_bin % 14'd100 != 0) && (day_bin == 5'd29)) 
+				if ((leapYear) && ({day1, day0} == 8'b00101001)) // 29th 
 				begin 
-					day_bin 	<= 5'd1;  
-					month_bin 	<= month_bin + 1;
+					month0 <= month0 + 4'd1;
+
+					day1 	<= 4'd0;
+					day0 	<= 4'd1;  
 				end
-				else if (day_bin == 5'd28) 
+				else if ({day1, day0} == 8'b00101000) // 28th
 				begin 
-					day_bin 	<= 5'd1;  
-					month_bin 	<= month_bin + 1;
+					month0 <= month0 + 4'd1;
+					
+					day1 	<= 4'd0;
+					day0 	<= 4'd1;
 				end
 			end
 
