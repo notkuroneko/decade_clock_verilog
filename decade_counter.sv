@@ -251,7 +251,7 @@ module decade_counter(
 								(min1 == 4'd5) 	&& 	(min0 == 4'd9)	&&
 								(sec1 == 4'd5) 	&& 	(sec0 == 4'd9)) 
 							begin
-								if (day0 == 4'd1001)
+								if (day0 == 4'b1001)
 								begin
 									// Increasement of day1
 									day1 <= day1 + 4'd1;
