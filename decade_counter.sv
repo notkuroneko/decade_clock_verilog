@@ -131,7 +131,19 @@ module decade_counter(
 
 	// button
 	reg [1:0] state;
-	assign state = (tick_change) ? ((state == 2'b11) ? 2'b00 : (state + 2'b01)) : (state + 2'b00);
+	// assign state = (tick_change) ? ((state == 2'b11) ? 2'b00 : (state + 2'b01)) : (state + 2'b00);
+	always @(posedge clk or negedge rst_n)
+	begin
+		if (!rst_n)
+		begin
+			state <= 2'd0;
+		end
+		else if (tick_change)
+		begin
+			state <= state + 1;
+		end
+	end
+
 	reg led17_;
 	reg led14_;
 	reg led10_;
@@ -139,6 +151,7 @@ module decade_counter(
 	assign led14 = led14_;
 	assign led10 = led10_;
 
+	initial state = 2'b00;
 
 
 
@@ -185,6 +198,12 @@ module decade_counter(
 			case (state)	// set time
 				2'b01 	:	// second
 					begin
+						sec1 <= (tick_up && (sec0 == 4'd9))	? ((sec1 == 4'd5) ? 4'd0 : (sec1 + 4'd1)) : sec1 + 4'd0;
+						sec1 <= (tick_down && (sec0 == 4'd0)) ? ((sec1 == 4'd0) ? 4'd5 : (sec1 - 4'd1)) : sec1 + 4'd0;
+
+						sec0 <= (tick_up)	? ((sec0 == 4'd9) ? (4'd0) : (sec0 + 4'd1)) : sec0 + 4'd0;
+						sec0 <= (tick_down)	? ((sec0 == 4'd0) ? (4'd9) : (sec0 - 4'd1)) : sec0 + 4'd0;
+
 						// display red led for state
 						led17_ <= 1'd0;
 						led14_ <= 1'd0;
@@ -192,8 +211,8 @@ module decade_counter(
 					end
 				2'b10 	:	// minute
 					begin
-						//min1 <= (tick_up)	? () : min1 + 4'd0;
-						//min1 <= (tick_down)	? () : min1 + 4'd0;
+						min1 <= (tick_up && (min0 == 4'd9))	? ((min1 == 4'd5) ? 4'd0 : (min1 + 4'd1)) : min1 + 4'd0;
+						min1 <= (tick_down && (min0 == 4'd0)) ? ((min1 == 4'd0) ? 4'd5 : (min1 - 4'd1)) : min1 + 4'd0;
 
 						min0 <= (tick_up)	? ((min0 == 4'd9) ? (4'd0) : (min0 + 4'd1)) : min0 + 4'd0;
 						min0 <= (tick_down)	? ((min0 == 4'd0) ? (4'd9) : (min0 - 4'd1)) : min0 + 4'd0;
@@ -500,22 +519,17 @@ module delay #(parameter COUNT  = 26'd49_999_999,
 	input en; 		// enable clock signal active low
 	
 	reg [COUNTW - 1 : 0] count;
-	
 	always @(posedge CLOCK_50MHZ or negedge reset_n)
 	begin
 		if(!reset_n)
 		begin
 			count <= 0;
 		end
-		else if (!en)
-		begin
-			count <= 0;
-		end
-		else if(count == COUNT)
+		else if (count == COUNT)
 		begin
 			count <= 1'd0;
 		end
-		else
+		else if (en)
 		begin
 			count <= count + 1;
 		end
