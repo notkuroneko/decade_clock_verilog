@@ -6,8 +6,9 @@ module decade_counter(
 	input 	butt_increase,		// butt = button (p33 user_man)
 	input 	butt_decrease,		// butt press = 0, release = 1
 	input 	butt_change,
-	output reg	led0,			// led0 and led1 to show the state
-	output reg	led1,
+	output reg	led17,			// led0 and led1 to show the state
+	output reg	led14,
+	output reg 	led10,
 	output logic [6:0] seg0,
 	output logic [6:0] seg1,
 	output logic [6:0] seg2,
@@ -142,22 +143,79 @@ module decade_counter(
 		// 	state <= state + 2'b01;
 		// end
 	end
-	case (state)
-		2'b01 	:
-			begin
-				if(sw_mode)
-				begin
-					
+	if(sw_mode)
+	begin
+		case (state)	// set date
+			2'b01 	: 
+				begin 	// day
+					// display red led for state
+					assign led17 = 1'd1;
+					assign led14 = 1'd0;
+					assign led10 = 1'd0;
 				end
-				else
+			2'b10 	:
+				begin 	// month
+					// display red led for state
+					assign led17 = 1'd0;
+					assign led14 = 1'd1;
+					assign led10 = 1'd0;
+				end
+			2'b11 	:
+				begin 	// year
+					
+					// display red led for state
+					assign led17 = 1'd0;
+					assign led14 = 1'd0;
+					assign led10 = 1'd1;
+				end
+			default : 
 				begin
+					// display red led for state
+					assign led17 = 1'd0;
+					assign led14 = 1'd0;
+					assign led10 = 1'd0;
+				end
+		endcase
+	end
+	else
+	begin
+		case (state)	// set time
+			2'b01 	:	// second
+				begin
+					// display red led for state
+					assign led17 = 1'd0;
+					assign led14 = 1'd0;
+					assign led10 = 1'd1;
+				end
+			2'b10 	:	// minute
+				begin
+					// display red led for state
+					assign led17 = 1'd0;
+					assign led14 = 1'd1;
+					assign led10 = 1'd0;
+				end
+			2'b11 	:	// hour
+				begin
+					hour1 <= (tick_up) 		? ( (hour0 == 4'd9) ? hour1 + 4'd1 : ((hour0 == 4'd3 && hour1 == 4'd2) ? 4'd0 : hour1 + 4'd0) ) : hour1 + 4'd0 ;
+					hour1 <= (tick_down)	? ( (hour0 == 4'd0) ? ((hour1 == 4'd0) ? 4'd2 : hour1 - 4'd1) : hour1 + 4'd0 ) : hour1 + 4'd0;
 
-				endc
-			end
-		2'b10 	:
-		2'b11 	:
-		default : /* default */;
-	endcase
+					hour0 <= (tick_up) 		? ( ((hour0 == 4'd9) || (hour0 == 4'd3 && hour1 == 4'd2)) ? 4'd0 : (hour0 + 4'd1) ) : hour0 + 4'd0;
+					hour0 <= (tick_down) 	? ( (hour0 == 4'd0) ? ((hour1 == 4'd0) ? 4'd3 : 4'd9) : hour0 - 4'd1 ) : hour0 + 4'd0;
+
+					// display red led for state
+					assign led17 = 1'd1;
+					assign led14 = 1'd0;
+					assign led10 = 1'd0;
+				end
+			default : 
+				begin
+					// display red led for state
+					assign led17 = 1'd0;
+					assign led14 = 1'd0;
+					assign led10 = 1'd0;
+				end
+		endcase
+	end
 
 
 
@@ -285,6 +343,8 @@ module decade_counter(
 			end
 
 			// DATE BLOCK
+			if (state == 2'b00) 
+			begin
 			if ( (dayChange == 1'b1) && ({year2, year1, year0} 	== 12'b1001_1001_1001) 	// ~999
 									 && ({month1, month0} 		== 8'b0001_0010)		// December
 									 && ({day1, day0} 			== 8'b0011_0001))		// 31st
@@ -400,6 +460,8 @@ module decade_counter(
 					day0 	<= 4'd1;
 				end
 			end
+			end // if (state == 2'b00)
+			
 
 		end
 	end
