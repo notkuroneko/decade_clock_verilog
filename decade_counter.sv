@@ -195,14 +195,59 @@ module decade_counter(
 		else
 		begin
 			// TIME BLOCK
+			if (~sw_mode)
+			begin
 			case (state)	// set time
 				2'b01 	:	// second
 					begin
-						sec1 <= (tick_up && (sec0 == 4'd9))	? ((sec1 == 4'd5) ? 4'd0 : (sec1 + 4'd1)) : sec1 + 4'd0;
-						sec1 <= (tick_down && (sec0 == 4'd0)) ? ((sec1 == 4'd0) ? 4'd5 : (sec1 - 4'd1)) : sec1 + 4'd0;
+						// sec1 <= (tick_up && (sec0 == 4'd9))	? ((sec1 == 4'd5) ? 4'd0 : (sec1 + 4'd1)) : sec1 + 4'd0;
+						// sec1 <= (tick_down && (sec0 == 4'd0)) ? ((sec1 == 4'd0) ? 4'd5 : (sec1 - 4'd1)) : sec1 + 4'd0;
+						// sec0 <= (tick_up)	? ((sec0 == 4'd9) ? (4'd0) : (sec0 + 4'd1)) : sec0 + 4'd0;
+						// sec0 <= (tick_down)	? ((sec0 == 4'd0) ? (4'd9) : (sec0 - 4'd1)) : sec0 + 4'd0;
 
-						sec0 <= (tick_up)	? ((sec0 == 4'd9) ? (4'd0) : (sec0 + 4'd1)) : sec0 + 4'd0;
-						sec0 <= (tick_down)	? ((sec0 == 4'd0) ? (4'd9) : (sec0 - 4'd1)) : sec0 + 4'd0;
+						if (tick_up)
+						begin
+							if (sec0 == 4'd9) 
+							begin
+								sec0 <= 4'd0;
+								if (sec1 == 4'd5) 
+								begin
+									sec1 <= 4'd0;
+								end
+								else
+								begin
+									sec1 <= sec1 + 4'd1;
+								end
+							end
+							else
+							begin
+								sec0 <= sec0 + 4'd1;
+							end
+						end
+						else if (tick_down) 
+						begin
+							if (sec0 == 4'd0) 
+							begin
+								sec0 <= 4'd9;
+								if(sec1 == 4'd0)
+								begin
+									sec1 <= 4'd5;
+								end
+								else
+								begin
+									sec1 <= sec1 - 4'd1;
+								end
+							end
+							else
+							begin
+								sec0 <= sec0 - 4'd1;		
+							end	
+						end
+						else
+						begin
+							sec1 <= sec1 + 4'd0;
+							sec0 <= sec0 + 4'd0;	
+						end
 
 						// display red led for state
 						led17_ <= 1'd0;
@@ -325,7 +370,8 @@ module decade_counter(
 						led10_ <= 1'd0;
 					end
 			endcase
-
+			end // if (~sw_mode)
+			else begin
 			// DATE BLOCK
 			case (state)	// set date
 				2'b01 	: 
@@ -473,6 +519,7 @@ module decade_counter(
 						led10_ <= 1'd0;
 					end
 			endcase
+			end
 		end
 	end
 endmodule
