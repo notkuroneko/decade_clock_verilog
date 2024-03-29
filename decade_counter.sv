@@ -462,16 +462,71 @@ module decade_counter(
 								day1 <= 4'd0;
 								day0 <= 4'd1;
 							end
+							else if ({month1, month0} == 8'b00000010) // Feb
+							begin
+								if (((leapYear) && ({day1, day0} == 8'b00101001)) || ((!leapYear) &&{day1, day0} == 8'b00101000))
+								begin
+									day1 <= 4'd0;
+									day0 <= 4'd1;
+								end
+							end
+							else if (day0 == 4'd9) 
+							begin
+								day1 <= day1 + 4'd1;
+								day0 <= 4'd0;
+							end
 							else
+							begin
+								day0 <= day0 + 4'd1;
+							end
 						end
 						else if (tick_down) 
 						begin
-							
+							if ((day1 == 4'd0) && (day0 == 4'd1) && (({month1, month0} 	== 8'b00000001) ||	// Jan
+																	 ({month1, month0} 	== 8'b00000011) ||	// Mar
+																	 ({month1, month0} 	== 8'b00000101) ||	// May
+																	 ({month1, month0} 	== 8'b00000111) ||	// Jul
+																	 ({month1, month0} 	== 8'b00001000) ||	// Aug
+																	 ({month1, month0} 	== 8'b00010000))) 	// Oct
+							begin
+								day1 <= 4'd3;
+								day0 <= 4'd1;
+							end
+							else if ((day1 == 4'd0) && (day0 == 4'd1) && (	({month1, month0} 	== 8'b00000100) ||	// Apr
+																			({month1, month0} 	== 8'b00000110) ||	// Jun
+																			({month1, month0} 	== 8'b00001001) ||	// Sep
+																			({month1, month0} 	== 8'b00010001)))	// Nov 
+							begin
+								day1 <= 4'd3;
+								day0 <= 4'd0;
+							end
+							else if ((day1 == 4'd0) && (day0 == 4'd1) && ({month1, month0} == 8'b00000010)) // Feb
+							begin
+								if (leapYear)
+								begin
+									day1 <= 4'd2;
+									day0 <= 4'd9;
+								end
+								else if (!leapYear)
+								begin
+									day1 <= 4'd2;
+									day0 <= 4'd8;
+								end
+							end
+							else if ((day0 == 4'd0) && (day1 != 4'd0)) 
+							begin
+								day1 <= day1 - 4'd1;
+								day0 <= 4'd9;
+							end
+							else
+							begin
+								day0 <= day0 - 4'd1;
+							end
 						end
 						else
 						begin
-							hour1 <= hour1 + 4'd0;
-							hour0 <= hour0 + 4'd0;
+							day1 <= day1 + 4'd0;
+							day0 <= day0 + 4'd0;
 						end
 						// display red led for state
 						led17_ <= 1'd1;
