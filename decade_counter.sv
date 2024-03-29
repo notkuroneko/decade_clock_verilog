@@ -503,7 +503,11 @@ module delay #(parameter COUNT  = 26'd49_999_999,
 	
 	always @(posedge CLOCK_50MHZ or negedge reset_n)
 	begin
-		if(~reset_n || ~en)
+		if(!reset_n)
+		begin
+			count <= 0;
+		end
+		else if (!en)
 		begin
 			count <= 0;
 		end
