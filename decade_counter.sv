@@ -160,7 +160,7 @@ module decade_counter(
 	reg monthChange;
 	reg yearChange;
 
-	assign yearChange = ((month1 == 4'd2) && (month0 == 4'd1) && (day1 = 4'd1) && (day0 == 4'd3));
+	assign yearChange = ((month1 == 4'd2) && (month0 == 4'd1) && (day1 == 4'd1) && (day0 == 4'd3));
 
 
 	assign dayChange = ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
@@ -177,6 +177,7 @@ module decade_counter(
 													(year0 == 4'b0110)))		// so y0 is 2, 6
 						) && 
 						((year1 != 4'b0000) && (year0 != 4'b0000)));	// not divide_able to 100
+						
 	always @(posedge clk or negedge rst_n)
 	begin
 		if (~rst_n)
@@ -339,36 +340,37 @@ module decade_counter(
 					begin 	// Year
 						if ( (yearChange == 1'b1) )
 							begin
-								if ({year3, year2, year1, year0} = 16'b1001_1001_1001_1001) // 9999
+								if ({year3, year2, year1, year0} == 16'b1001_1001_1001_1001) // 9999
 								begin
 									year0 <= 4'd0;
 									year1 <= 4'd0;
 									year2 <= 4'd0;
 									year3 <= 4'd0;
 								end
-								else if ({year2, year1, year0} = 12'b1001_1001_1001) // ~999
+								else if ({year2, year1, year0} == 12'b1001_1001_1001) // ~999
 								begin
-									year3 <= year3 + 4'd1
+									year3 <= year3 + 4'd1;
 									year2 	<= 4'd0;
 									year1 	<= 4'd0;
 									year0 	<= 4'd0;
 								end
-								else if ({year1, year0} = 8'b1001_1001) // ~~99
+								else if ({year1, year0} == 8'b1001_1001) // ~~99
 									begin
 										year3 <= year3 + 4'd1;
 										year2 <= year2 + 4'd1;
 										year1 	<= 4'd0;
 										year0 	<= 4'd0;
 									end
-								else if ({year0} = 4'b1001)
+								else if ({year0} == 4'b1001)
 								begin
 									year3 <= year3 + 4'd1;
 									year2 <= year2 + 4'd1;
 									year1 <= year1 + 4'd1;
 									year0 <= 4'd0;
-								end
+								end	
+							end
 									
-								end
+							
 
 
 						// display red led for state
@@ -380,7 +382,7 @@ module decade_counter(
 					begin 	// month
 					
 							/* code */
-						end
+						
 						// display red led for state
 						led17_ <= 1'd0;
 						led14_ <= 1'd1;
@@ -517,8 +519,10 @@ module decade_counter(
 						led14_ <= 1'd0;
 						led10_ <= 1'd0;
 					end
+					
 			endcase
 		end
+		
 	end
 endmodule
 
