@@ -157,6 +157,12 @@ module decade_counter(
 
 	/**************  DIGITAL CLOCK'S LOGIC  ****************/
 	reg dayChange;
+	reg monthChange;
+	reg yearChange;
+
+	assign yearChange = ((month1 == 4'd2) && (month0 == 4'd1) && (day1 = 4'd1) && (day0 == 4'd3));
+
+
 	assign dayChange = ((hour1 == 4'd2) 	&& 	(hour0 == 4'd3) 	&&
 						(min1 == 4'd5) 	&& 	(min0 == 4'd9)	&&
 						(sec1 == 4'd5) 	&& 	(sec0 == 4'd9)	&&
@@ -195,54 +201,14 @@ module decade_counter(
 		else
 		begin
 			// TIME BLOCK
-			if (~sw_mode)
-			begin
 			case (state)	// set time
 				2'b01 	:	// second
 					begin
-						if (tick_up)
-						begin
-							if (sec0 == 4'd9) 
-							begin
-								sec0 <= 4'd0;
-								if (sec1 == 4'd5) 
-								begin
-									sec1 <= 4'd0;
-								end
-								else
-								begin
-									sec1 <= sec1 + 4'd1;
-								end
-							end
-							else
-							begin
-								sec0 <= sec0 + 4'd1;
-							end
-						end
-						else if (tick_down) 
-						begin
-							if (sec0 == 4'd0) 
-							begin
-								sec0 <= 4'd9;
-								if(sec1 == 4'd0)
-								begin
-									sec1 <= 4'd5;
-								end
-								else
-								begin
-									sec1 <= sec1 - 4'd1;
-								end
-							end
-							else
-							begin
-								sec0 <= sec0 - 4'd1;		
-							end	
-						end
-						else
-						begin
-							sec1 <= sec1 + 4'd0;
-							sec0 <= sec0 + 4'd0;	
-						end
+						sec1 <= (tick_up && (sec0 == 4'd9))	? ((sec1 == 4'd5) ? 4'd0 : (sec1 + 4'd1)) : sec1 + 4'd0;
+						sec1 <= (tick_down && (sec0 == 4'd0)) ? ((sec1 == 4'd0) ? 4'd5 : (sec1 - 4'd1)) : sec1 + 4'd0;
+
+						sec0 <= (tick_up)	? ((sec0 == 4'd9) ? (4'd0) : (sec0 + 4'd1)) : sec0 + 4'd0;
+						sec0 <= (tick_down)	? ((sec0 == 4'd0) ? (4'd9) : (sec0 - 4'd1)) : sec0 + 4'd0;
 
 						// display red led for state
 						led17_ <= 1'd0;
@@ -251,49 +217,11 @@ module decade_counter(
 					end
 				2'b10 	:	// minute
 					begin
-						if (tick_up)
-						begin
-							if (min0 == 4'd9) 
-							begin
-								min0 <= 4'd0;
-								if (min1 == 4'd5) 
-								begin
-									min1 <= 4'd0;
-								end
-								else
-								begin
-									min1 <= min1 + 4'd1;
-								end
-							end
-							else
-							begin
-								min0 <= min0 + 4'd1;
-							end
-						end
-						else if (tick_down) 
-						begin
-							if (min0 == 4'd0) 
-							begin
-								min0 <= 4'd9;
-								if(min1 == 4'd0)
-								begin
-									min1 <= 4'd5;
-								end
-								else
-								begin
-									min1 <= min1 - 4'd1;
-								end
-							end
-							else
-							begin
-								min0 <= min0 - 4'd1;		
-							end	
-						end
-						else
-						begin
-							min1 <= min1 + 4'd0;
-							min0 <= min0 + 4'd0;	
-						end
+						min1 <= (tick_up && (min0 == 4'd9))	? ((min1 == 4'd5) ? 4'd0 : (min1 + 4'd1)) : min1 + 4'd0;
+						min1 <= (tick_down && (min0 == 4'd0)) ? ((min1 == 4'd0) ? 4'd5 : (min1 - 4'd1)) : min1 + 4'd0;
+
+						min0 <= (tick_up)	? ((min0 == 4'd9) ? (4'd0) : (min0 + 4'd1)) : min0 + 4'd0;
+						min0 <= (tick_down)	? ((min0 == 4'd0) ? (4'd9) : (min0 - 4'd1)) : min0 + 4'd0;
 
 						// display red led for state
 						led17_ <= 1'd0;
@@ -302,44 +230,12 @@ module decade_counter(
 					end
 				2'b11 	:	// hour
 					begin
-						if (tick_up)
-						begin
-							if ((hour0 == 4'd3) && (hour1 == 4'd2)) begin
-								hour1 <= 4'd0;
-								hour0 <= 4'd0;
-							end
-							else if (hour0 == 4'd9) 
-							begin
-								hour1 <= hour1 + 4'd1;
-								hour0 <= 4'd0;
-							end
-							else 
-							begin
-								hour0 <= hour0 + 4'd1;
-							end
-						end
-						else if (tick_down) 
-						begin
-							if ((hour0 == 4'd0) && (hour1 == 4'd0)) 
-							begin
-								hour1 <= 4'd2;
-								hour0 <= 4'd3;
-							end
-							else if (hour0 == 4'd0) 
-							begin
-								hour1 <= hour1 - 4'd1;
-								hour0 <= 4'd9;
-							end
-							else
-							begin
-								min0 <= min0 - 4'd1;		
-							end	
-						end
-						else
-						begin
-							hour1 <= hour1 + 4'd0;
-							hour0 <= hour0 + 4'd0;
-						end
+						hour1 <= (tick_up) 		? ( (hour0 == 4'd9) ? hour1 + 4'd1 : ((hour0 == 4'd3 && hour1 == 4'd2) ? 4'd0 : hour1 + 4'd0) ) : hour1 + 4'd0 ;
+						hour1 <= (tick_down)	? ( (hour0 == 4'd0) ? ((hour1 == 4'd0) ? 4'd2 : hour1 - 4'd1) : hour1 + 4'd0 ) : hour1 + 4'd0;
+
+						hour0 <= (tick_up) 		? ( ((hour0 == 4'd9) || (hour0 == 4'd3 && hour1 == 4'd2)) ? 4'd0 : (hour0 + 4'd1) ) : hour0 + 4'd0;
+						hour0 <= (tick_down) 	? ( (hour0 == 4'd0) ? ((hour1 == 4'd0) ? 4'd3 : 4'd9) : hour0 - 4'd1 ) : hour0 + 4'd0;
+
 						// display red led for state
 						led17_ <= 1'd1;
 						led14_ <= 1'd0;
@@ -435,99 +331,46 @@ module decade_counter(
 						led10_ <= 1'd0;
 					end
 			endcase
-			end // if (~sw_mode)
-			else 
-			begin // if (sw_mode)
+
+
 			// DATE BLOCK
 			case (state)	// set date
 				2'b01 	: 
-					begin 	// day
-						if (tick_up)
-						begin
-							if ((day1 == 4'd3) && (day0 == 4'd1) && (({month1, month0} 	== 8'b00000001) ||	// Jan
-																	 ({month1, month0} 	== 8'b00000011) ||	// Mar
-																	 ({month1, month0} 	== 8'b00000101) ||	// May
-																	 ({month1, month0} 	== 8'b00000111) ||	// Jul
-																	 ({month1, month0} 	== 8'b00001000) ||	// Aug
-																	 ({month1, month0} 	== 8'b00010000))) 	// Oct
+					begin 	// Year
+						if ( (yearChange == 1'b1) )
 							begin
-								day1 <= 4'd0;
-								day0 <= 4'd1;
-							end
-							else if ((day1 == 4'd3) && (day0 == 4'd0) && (	({month1, month0} 	== 8'b00000100) ||	// Apr
-																			({month1, month0} 	== 8'b00000110) ||	// Jun
-																			({month1, month0} 	== 8'b00001001) ||	// Sep
-																			({month1, month0} 	== 8'b00010001)))	// Nov 
-							begin
-								day1 <= 4'd0;
-								day0 <= 4'd1;
-							end
-							else if ({month1, month0} == 8'b00000010) // Feb
-							begin
-								if (((leapYear) && ({day1, day0} == 8'b00101001)) || ((!leapYear) &&{day1, day0} == 8'b00101000))
+								if ({year3, year2, year1, year0} = 16'b1001_1001_1001_1001) // 9999
 								begin
-									day1 <= 4'd0;
-									day0 <= 4'd1;
+									year0 <= 4'd0;
+									year1 <= 4'd0;
+									year2 <= 4'd0;
+									year3 <= 4'd0;
 								end
-							end
-							else if (day0 == 4'd9) 
-							begin
-								day1 <= day1 + 4'd1;
-								day0 <= 4'd0;
-							end
-							else
-							begin
-								day0 <= day0 + 4'd1;
-							end
-						end
-						else if (tick_down) 
-						begin
-							if ((day1 == 4'd0) && (day0 == 4'd1) && (({month1, month0} 	== 8'b00000001) ||	// Jan
-																	 ({month1, month0} 	== 8'b00000011) ||	// Mar
-																	 ({month1, month0} 	== 8'b00000101) ||	// May
-																	 ({month1, month0} 	== 8'b00000111) ||	// Jul
-																	 ({month1, month0} 	== 8'b00001000) ||	// Aug
-																	 ({month1, month0} 	== 8'b00010000))) 	// Oct
-							begin
-								day1 <= 4'd3;
-								day0 <= 4'd1;
-							end
-							else if ((day1 == 4'd0) && (day0 == 4'd1) && (	({month1, month0} 	== 8'b00000100) ||	// Apr
-																			({month1, month0} 	== 8'b00000110) ||	// Jun
-																			({month1, month0} 	== 8'b00001001) ||	// Sep
-																			({month1, month0} 	== 8'b00010001)))	// Nov 
-							begin
-								day1 <= 4'd3;
-								day0 <= 4'd0;
-							end
-							else if ((day1 == 4'd0) && (day0 == 4'd1) && ({month1, month0} == 8'b00000010)) // Feb
-							begin
-								if (leapYear)
+								else if ({year2, year1, year0} = 12'b1001_1001_1001) // ~999
 								begin
-									day1 <= 4'd2;
-									day0 <= 4'd9;
+									year3 <= year3 + 4'd1
+									year2 	<= 4'd0;
+									year1 	<= 4'd0;
+									year0 	<= 4'd0;
 								end
-								else if (!leapYear)
+								else if ({year1, year0} = 8'b1001_1001) // ~~99
+									begin
+										year3 <= year3 + 4'd1;
+										year2 <= year2 + 4'd1;
+										year1 	<= 4'd0;
+										year0 	<= 4'd0;
+									end
+								else if ({year0} = 4'b1001)
 								begin
-									day1 <= 4'd2;
-									day0 <= 4'd8;
+									year3 <= year3 + 4'd1;
+									year2 <= year2 + 4'd1;
+									year1 <= year1 + 4'd1;
+									year0 <= 4'd0;
 								end
-							end
-							else if ((day0 == 4'd0) && (day1 != 4'd0)) 
-							begin
-								day1 <= day1 - 4'd1;
-								day0 <= 4'd9;
-							end
-							else
-							begin
-								day0 <= day0 - 4'd1;
-							end
-						end
-						else
-						begin
-							day1 <= day1 + 4'd0;
-							day0 <= day0 + 4'd0;
-						end
+									
+								end
+
+
 						// display red led for state
 						led17_ <= 1'd1;
 						led14_ <= 1'd0;
@@ -535,13 +378,17 @@ module decade_counter(
 					end
 				2'b10 	:
 					begin 	// month
+					
+							/* code */
+						end
 						// display red led for state
 						led17_ <= 1'd0;
 						led14_ <= 1'd1;
 						led10_ <= 1'd0;
 					end
 				2'b11 	:
-					begin 	// year
+					begin 	// day
+
 						
 						// display red led for state
 						led17_ <= 1'd0;
@@ -671,7 +518,6 @@ module decade_counter(
 						led10_ <= 1'd0;
 					end
 			endcase
-			end
 		end
 	end
 endmodule
