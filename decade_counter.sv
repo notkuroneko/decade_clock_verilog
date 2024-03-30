@@ -201,6 +201,8 @@ module decade_counter(
 		end
 		else
 		begin
+			if(~sw_mode)
+			begin
 			// TIME BLOCK
 			case (state)	// set time
 				2'b01 	:	// second
@@ -332,8 +334,9 @@ module decade_counter(
 						led10_ <= 1'd0;
 					end
 			endcase
-
-
+			end
+			else if (sw_mode)
+			begin
 			// DATE BLOCK
 			case (state)	// set date
 				2'b01 	: 
@@ -356,15 +359,12 @@ module decade_counter(
 								end
 								else if ({year1, year0} == 8'b1001_1001) // ~~99
 									begin
-										year3 <= year3 + 4'd1;
 										year2 <= year2 + 4'd1;
 										year1 	<= 4'd0;
 										year0 	<= 4'd0;
 									end
-								else if ({year0} == 4'b1001)
+								else if ({year0} == 4'b1001)	// ~~~9
 								begin
-									year3 <= year3 + 4'd1;
-									year2 <= year2 + 4'd1;
 									year1 <= year1 + 4'd1;
 									year0 <= 4'd0;
 								end	
@@ -521,6 +521,7 @@ module decade_counter(
 					end
 					
 			endcase
+			end // end if(sw_switch)
 		end
 		
 	end
